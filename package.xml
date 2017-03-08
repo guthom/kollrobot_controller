@@ -49,6 +49,11 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>custom_parameter</build_depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>boost</build_depend>
+  <build_depend>moveit_msgs</build_depend>
+  <build_depend>moveit_core</build_depend>
+  <build_depend>moveit_robot_trajectory</build_depend>
 
   <run_depend>message_runtime</run_depend>
   <run_depend>std_msgs</run_depend>
@@ -59,6 +64,11 @@
   <run_depend>tf</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>custom_parameter</run_depend>
+  <run_depend>eigen</run_depend>
+  <run_depend>boost</run_depend>
+  <run_depend>moveit_msgs</run_depend>
+  <run_depend>moveit_core</run_depend>
+  <run_depend>moveit_robot_trajectory</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

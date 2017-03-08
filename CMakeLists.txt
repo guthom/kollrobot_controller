@@ -37,6 +37,7 @@ MESSAGE(STATUS "Found ROS-Services: " ${SERVICES})
 
 #find catkin packages
 find_package(catkin REQUIRED
+    moveit_ros_planning_interface
     message_generation
     roscpp
     rospy
@@ -73,23 +74,28 @@ catkin_package(
       geometry_msgs
       nav_msgs
       custom_parameter
+      eigen
   #  DEPENDS system_lib
 )
 
 #include directories
 include_directories(include ${CATKIN_DEVEL_PREFIX}/include)
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIR} 
+    ${EIGEN_INCLUDE_DIRS}
+)
 
 
 #SET GLOBAL DEPENDECIES and Links
 set(LINKLIBS)
-set(GLOB_LINKLIBS ${catkin_LIBRARIES})
+set(GLOB_LINKLIBS ${catkin_LIBRARIES} ) 
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
     ${PROJECT_NAME}_generate_messages
     ${catkin_EXPORTED_TARGETS}
     custom_parameter_parameter 
     custom_parameter_parameterHandler
+    
 )
 
 #read all directories as submodules
