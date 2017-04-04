@@ -15,8 +15,6 @@ ros::NodeHandle* _node;
 
 //parameter stuff
 customparameter::ParameterHandler* parameterHandler;
-//customparameter::Parameter<bool> param_UseCurrentPoseForTask;
-
 
 KollrobotMoveGroup* armGroup;
 
@@ -53,10 +51,14 @@ int main(int argc, char **argv)
     if(!armGroup->IsPlanning && !armGroup->IsExecuting)
     {
         geometry_msgs::Pose pose;
-        pose.orientation.w = 1.0;
-        pose.position.x = 0.5;
-        pose.position.y = RandomFloat(0.2, 0.6);
-        pose.position.z = RandomFloat(-0.5, 0.5);
+        pose.orientation.w = 1;
+        pose.orientation.x = 0;
+        pose.orientation.y = 0;
+        pose.orientation.z = 0;
+
+        pose.position.x = RandomFloat(0.5, 0.8);
+        pose.position.y = RandomFloat(-0.5, 0.5);
+        pose.position.z = RandomFloat(-0.2, 0.4);
         armGroup->PlanToPoseExecute(pose);
         //armGroup->PlanToPose(pose);
     }

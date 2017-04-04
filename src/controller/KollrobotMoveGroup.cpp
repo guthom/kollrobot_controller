@@ -8,10 +8,14 @@ KollrobotMoveGroup::KollrobotMoveGroup(ros::NodeHandle* parentNode, customparame
     Init(parentNode);
 }
 
+
+
 void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 {
     _nodeName = "MoveGroup_" + _groupName;
     _node = new ros::NodeHandle(*parentNode, _nodeName);
+
+    InitParameter();
 
     //init MoveIT Stuff
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
@@ -23,18 +27,24 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     //run node
     _nodeThread = new boost::thread(boost::bind(&KollrobotMoveGroup::Run,this));
 
+    InitMarker();
+}
+
+void KollrobotMoveGroup::InitParameter()
+{
+    std::string subNamespace = _nodeName + "/";
+    _param_RefreshRate = _parameterHandler->AddParameter("RefreshRate", subNamespace, "", int(20));
 }
 
 void KollrobotMoveGroup::InitMarker()
 {
     _markerTargetPose = visualization_msgs::Marker();
-    //TODO: add aprameter to change refernce frame
-    _markerTargetPose.header.frame_id =  "world";
+    _markerTargetPose.header.frame_id = "world";
     _markerTargetPose.type = visualization_msgs::Marker::SPHERE;
     _markerTargetPose.action = visualization_msgs::Marker::ADD;
-    _markerTargetPose.scale.x = 0.10;
-    _markerTargetPose.scale.y = 0.10;
-    _markerTargetPose.scale.z = 0.10;
+    _markerTargetPose.scale.x = 0.05;
+    _markerTargetPose.scale.y = 0.05;
+    _markerTargetPose.scale.z = 0.05;
     _markerTargetPose.color.a = 1.0;
     _markerTargetPose.color.r = 0.0;
     _markerTargetPose.color.g = 1.0;
@@ -52,6 +62,13 @@ void KollrobotMoveGroup::PlanToPose(geometry_msgs::Pose targetPose)
     }
 }
 
+void KollrobotMoveGroup::PublishMarker()
+{
+    //TODO: add aprameter to change refernce frame
+    _markerTargetPose.header.stamp = ros::Time::now();
+    _pubTargetPose.publish(_markerTargetPose);
+}
+
 void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
 {
     _moveGroup->setPoseTarget(targetPose);
@@ -65,9 +82,11 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
 
 void KollrobotMoveGroup::Run()
 {
-    ros::Rate rate(_refreshRate);
+    ros::Rate rate(_param_RefreshRate.GetValue());
     while(_node->ok())
     {
+        PublishMarker();
+
         ros::spinOnce();
         rate.sleep();
     }
@@ -77,15 +96,14 @@ void KollrobotMoveGroup::Execute()
 {
     _currentExecutedPlan = _currentPlan;
     _moveGroup->execute(_currentExecutedPlan);
+
+
 }
 
 void KollrobotMoveGroup::RunPlanning()
 {
     IsPlanning = true;
-
     PlanValid = _moveGroup->plan(_currentPlan);
-
-
     IsPlanning = false;
 }
 

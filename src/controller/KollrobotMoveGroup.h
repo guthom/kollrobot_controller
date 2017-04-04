@@ -33,7 +33,6 @@ public:
 
 private:
     //node stuff
-    float _refreshRate = 30;
     ros::NodeHandle* _node;
     std::string _nodeName;
     void Run();
@@ -41,12 +40,14 @@ private:
 
     std::string _groupName;
     void Init(ros::NodeHandle* parentNode);
+    void InitParameter();
 
     void RunPlanning();
     void RunPlanningExecute();
     boost::thread* _planningThread;
 
     //publisher
+    void PublishMarker();
     ros::Publisher _pubTargetPose;
     void InitMarker();
     visualization_msgs::Marker _markerTargetPose;
@@ -58,9 +59,9 @@ private:
     moveit::planning_interface::MoveGroupInterface::Plan _currentExecutedPlan;
 
     //parameter stuff
-    customparameter::ParameterHandler* _parameterHandler;
     void InitRosParams();
-    //customparameter::Parameter<float> param_VisuUpdateRate;
+    customparameter::ParameterHandler* _parameterHandler;
+    customparameter::Parameter<int> _param_RefreshRate;
 };
 
 #endif // KOLLROBOTMOVEGROUP_H
