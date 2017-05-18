@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
   ros::Rate rate(iRefreshRate);
   while(_node->ok())
-  {      
+  {
     //make new plan if armGroup is not planning
     if(!armGroup->IsPlanning && !armGroup->IsExecuting)
     {
