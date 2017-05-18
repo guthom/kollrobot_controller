@@ -12,7 +12,7 @@ KollrobotMoveGroup::KollrobotMoveGroup(ros::NodeHandle* parentNode, customparame
 
 void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 {
-    _nodeName = "MoveGroup_" + _groupName;
+    _nodeName = "MG_" + _groupName;
     _node = new ros::NodeHandle(*parentNode, _nodeName);
 
     InitParameter();

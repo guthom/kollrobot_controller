@@ -1,0 +1,11 @@
+<launch>	
+  <!--Launch everything related to the ur10 Robot--> 
+  <arg name="kollrobot" default="/home/$(env USER)/ROS/robotsimulation_ws/src/kollrobot_moveit_config/"/>
+  <!--rosparam command="load" file="$(arg kollrobot)/config/kinematics.yaml"/-->
+  <!--include file="$(arg Launchfile_Dir)ur10_gazebo.launch"/-->
+  <include file="$(arg kollrobot)/launch/newDemo.launch">
+    <!--arg name="sim" value="true"/>
+    <arg name="limited" value="true"/-->
+  </include>
+</launch>
+	

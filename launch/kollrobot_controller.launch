@@ -1,0 +1,4 @@
+<launch>	
+  <node name="kollrobot_controller" pkg="kollrobot_controller" type="kollrobot_controller" output="screen"/>
+</launch>
+	

@@ -92,10 +92,7 @@ set(GLOB_LINKLIBS ${catkin_LIBRARIES} )
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
     ${PROJECT_NAME}_generate_messages
-    ${catkin_EXPORTED_TARGETS}
-    custom_parameter_parameter 
-    custom_parameter_parameterHandler
-    
+    ${catkin_EXPORTED_TARGETS}    
 )
 
 #read all directories as submodules
