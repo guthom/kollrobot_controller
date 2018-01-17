@@ -29,6 +29,9 @@ public:
 
     void PlanToPose(geometry_msgs::Pose targetPose);
     void PlanToPoseExecute(geometry_msgs::Pose targetPose);
+    void PlanSimulationPath();
+    void UpdateCurrentState();
+    void MoveToValidRandom();
     void Execute();
 
 private:
@@ -44,6 +47,7 @@ private:
 
     void RunPlanning();
     void RunPlanningExecute();
+    void MoveToValidRandomRun();
     boost::thread* _planningThread;
 
     //publisher

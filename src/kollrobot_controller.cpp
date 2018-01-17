@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <custom_parameter/parameterHandler.h>
@@ -15,6 +16,11 @@ ros::NodeHandle* _node;
 
 //parameter stuff
 customparameter::ParameterHandler* parameterHandler;
+customparameter::Parameter<float> paramMaxWorkspace;
+customparameter::Parameter<bool> paramSimMode;
+customparameter::Parameter<bool> paramDemoMode;
+customparameter::Parameter<bool> paramDemoUR10Mode;
+customparameter::Parameter<bool> paramNormalMode;
 
 KollrobotMoveGroup* armGroup;
 
@@ -22,7 +28,11 @@ void InitParams()
 {
     std::string subNamespace = "";
     //Standard params
-    //parameterHandler->AddParameter("MapFrame", "", (std::string)"/map");   
+    paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 0.8f);
+    paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
+    paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
+    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", true);
+    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
 }
 
 float RandomFloat(float a, float b) {
@@ -32,41 +42,126 @@ float RandomFloat(float a, float b) {
     return a + r;
 }
 
+void RunDemoMode()
+{
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "arm");
+
+    ros::Rate rate(iRefreshRate);
+    while(_node->ok())
+    {
+        armGroup->UpdateCurrentState();
+        //make new plan if armGroup is not planning
+        if(!armGroup->IsPlanning && !armGroup->IsExecuting)
+        {
+            geometry_msgs::Pose pose;
+            pose.orientation.w = 1;
+            pose.orientation.x = 0;
+            pose.orientation.y = 0;
+            pose.orientation.z = 0;
+
+            // calculate random pose according to a really simple model of the workspace
+            // neoboix box size ~"0.70 0.60 0.20"
+
+            float maxWorkspace = paramMaxWorkspace.GetValue();
+            float xOffset = 0.35;
+            float yOffset = 0.30;
+
+            //left or right
+            pose.position.y = RandomFloat(yOffset, maxWorkspace);
+            int leftRight = rand() % 2;
+            if(leftRight == 0)
+            {
+                //switch sign for left area
+                pose.position.y = -pose.position.y;
+            }
+
+            //front or back
+            pose.position.x = RandomFloat(xOffset, maxWorkspace);
+            int frontBack = rand() % 2;
+            if(frontBack == 0)
+            {
+                //switch sign for back area
+                pose.position.x = -pose.position.x;
+            }
+
+            //finally send random pose
+            pose.position.z = RandomFloat(0.2, maxWorkspace);
+
+            ROS_INFO_STREAM("Sent new Pose:" << pose.position.x << ", " << pose.position.y << ", " << pose.position.z);
+            armGroup->PlanToPoseExecute(pose);
+            //armGroup->PlanToPose(pose);
+        }
+
+        //trigger the ros callbacks and wait the needed time
+        ros::spinOnce();
+        rate.sleep();
+    }
+}
+
+void RunDemoUR10Mode()
+{
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "manipulator");
+
+    ros::Rate rate(iRefreshRate);
+    while(_node->ok())
+    {
+        armGroup->UpdateCurrentState();
+        //make new plan if armGroup is not planning
+        if(!armGroup->IsPlanning && !armGroup->IsExecuting)
+        {
+            armGroup->MoveToValidRandom();
+        }
+
+        //trigger the ros callbacks and wait the needed time
+        ros::spinOnce();
+        rate.sleep();
+    }
+}
+
+void RunSimMode()
+{
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "arm");
+
+    ros::Rate rate(iRefreshRate);
+    while(_node->ok())
+    {
+        if(!armGroup->IsExecuting)
+        {
+            armGroup->PlanSimulationPath();
+            armGroup->Execute();
+        }
+    }
+}
+
+void RunNormalMode()
+{
+    ros::Rate rate(iRefreshRate);
+    while(_node->ok())
+    {
+    }
+}
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, nodeName);
-  _node = new ros::NodeHandle(nodeName);
+    ros::init(argc, argv, nodeName);
+    _node = new ros::NodeHandle(nodeName);
 
-  //init params
-  parameterHandler = new customparameter::ParameterHandler(_node);
-  InitParams();
+    //init params
+    parameterHandler = new customparameter::ParameterHandler(_node);
+    InitParams();
 
-  armGroup = new KollrobotMoveGroup(_node, parameterHandler, "arm");
+    if (paramDemoMode.GetValue())
+        RunDemoMode();
 
-  ros::Rate rate(iRefreshRate);
-  while(_node->ok())
-  {
-    //make new plan if armGroup is not planning
-    if(!armGroup->IsPlanning && !armGroup->IsExecuting)
-    {
-        geometry_msgs::Pose pose;
-        pose.orientation.w = 1;
-        pose.orientation.x = 0;
-        pose.orientation.y = 0;
-        pose.orientation.z = 0;
 
-        pose.position.x = RandomFloat(0.5, 0.8);
-        pose.position.y = RandomFloat(-0.5, 0.5);
-        pose.position.z = RandomFloat(-0.2, 0.4);
-        armGroup->PlanToPoseExecute(pose);
-        //armGroup->PlanToPose(pose);
-    }
+    if (paramDemoUR10Mode.GetValue())
+        RunDemoUR10Mode();
 
-    //trigger the ros callbacks and wait the needed time
-    ros::spinOnce();
-    rate.sleep();
+    if (paramSimMode.GetValue())
+        RunSimMode();
 
-  }
+    if (paramNormalMode.GetValue())
+        RunNormalMode();
+
   return 0;
 }

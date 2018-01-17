@@ -8,8 +8,6 @@ KollrobotMoveGroup::KollrobotMoveGroup(ros::NodeHandle* parentNode, customparame
     Init(parentNode);
 }
 
-
-
 void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 {
     _nodeName = "MG_" + _groupName;
@@ -39,7 +37,7 @@ void KollrobotMoveGroup::InitParameter()
 void KollrobotMoveGroup::InitMarker()
 {
     _markerTargetPose = visualization_msgs::Marker();
-    _markerTargetPose.header.frame_id = "world";
+    _markerTargetPose.header.frame_id = "base_link";
     _markerTargetPose.type = visualization_msgs::Marker::SPHERE;
     _markerTargetPose.action = visualization_msgs::Marker::ADD;
     _markerTargetPose.scale.x = 0.05;
@@ -74,7 +72,7 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
     _moveGroup->setPoseTarget(targetPose);
     _markerTargetPose.pose = targetPose;
 
-    if(_planningThread != NULL)
+    if(_planningThread != NULL && IsExecuting == false)
     {
         _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::RunPlanningExecute,this));
     }
@@ -92,32 +90,54 @@ void KollrobotMoveGroup::Run()
     }
 }
 
+void KollrobotMoveGroup::MoveToValidRandom()
+{
+    if(_planningThread != NULL && IsExecuting == false)
+    {
+        _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::MoveToValidRandomRun,this));
+    }
+}
+
+void KollrobotMoveGroup::MoveToValidRandomRun()
+{
+    _moveGroup->setRandomTarget();
+    IsExecuting = true;
+    _moveGroup->move();
+    IsExecuting = false;
+}
+
 void KollrobotMoveGroup::Execute()
 {
     _currentExecutedPlan = _currentPlan;
     _moveGroup->execute(_currentExecutedPlan);
-
-
 }
 
 void KollrobotMoveGroup::RunPlanning()
 {
     IsPlanning = true;
-    PlanValid = _moveGroup->plan(_currentPlan);
+    auto success = _moveGroup->plan(_currentPlan);
     IsPlanning = false;
 }
 
 
 void KollrobotMoveGroup::RunPlanningExecute()
 {
-    IsPlanning = true;
-    PlanValid = _moveGroup->plan(_currentPlan);
-    IsPlanning = false;
+    RunPlanning();
     Execute();
+}
+
+void KollrobotMoveGroup::UpdateCurrentState()
+{
+    _moveGroup->setStartStateToCurrentState();
+}
+
+void KollrobotMoveGroup::PlanSimulationPath()
+{
+//TODO: Implemetn if neccessary
 }
 
 KollrobotMoveGroup::~KollrobotMoveGroup()
 {
-    //release everithing and set pointer to NULL
+    //release everything and set pointer to NULL
     _parameterHandler = NULL;
 }
