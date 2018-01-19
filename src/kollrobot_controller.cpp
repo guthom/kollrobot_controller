@@ -17,6 +17,7 @@ ros::NodeHandle* _node;
 //parameter stuff
 customparameter::ParameterHandler* parameterHandler;
 customparameter::Parameter<float> paramMaxWorkspace;
+customparameter::Parameter<std::string> paramGroupName;
 customparameter::Parameter<bool> paramSimMode;
 customparameter::Parameter<bool> paramDemoMode;
 customparameter::Parameter<bool> paramDemoUR10Mode;
@@ -30,9 +31,11 @@ void InitParams()
     //Standard params
     paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 0.8f);
     paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
-    paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
-    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", true);
+    paramDemoMode = parameterHandler->AddParameter("DemoMode", "", true);
+    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", false);
     paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
+    std::string defaultValue = "manipulator";
+    paramGroupName = parameterHandler->AddParameter("GroupName", "", defaultValue);
 }
 
 float RandomFloat(float a, float b) {
@@ -44,7 +47,7 @@ float RandomFloat(float a, float b) {
 
 void RunDemoMode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "arm");
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
 
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
@@ -100,7 +103,7 @@ void RunDemoMode()
 
 void RunDemoUR10Mode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "manipulator");
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
 
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
@@ -120,7 +123,7 @@ void RunDemoUR10Mode()
 
 void RunSimMode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, "arm");
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
 
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
