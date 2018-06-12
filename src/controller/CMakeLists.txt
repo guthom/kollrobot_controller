@@ -37,7 +37,7 @@ list(APPEND LIBNAMES)
 #add libraries if needed
 SET(LIBNAME KollrobotMoveGroup)
 list(APPEND LIBNAMES ${LIBNAME})
-add_library(${LIBNAME} KollrobotMoveGroup.cpp)
+add_library(${LIBNAME} KollrobotMoveGroup.cpp PickBoxAction.cpp)
 add_dependencies(${LIBNAME} ${GLOB_DEPENDENCIES} ${LOCAL_DEPENDENCIES})
 target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS}) 
 

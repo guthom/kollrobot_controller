@@ -6,6 +6,13 @@
 #include <custom_parameter/parameter.h>
 
 #include "controller/KollrobotMoveGroup.h"
+#include <octomap_msgs/Octomap.h>
+#include <octomap/octomap.h>
+#include <moveit_msgs/ApplyPlanningScene.h>
+#include <kollrobot_controller/PickBoxAction.h>
+#include <kollrobot_controller/PlaceBoxAction.h>
+#include <actionlib/server/simple_action_server.h>
+#include <sensor_msgs/JointState.h>
 
 //common stuff
 float iRefreshRate = 0.2;
@@ -25,13 +32,14 @@ customparameter::Parameter<bool> paramNormalMode;
 
 KollrobotMoveGroup* armGroup;
 
+
 void InitParams()
 {
     std::string subNamespace = "";
     //Standard params
     paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 0.8f);
     paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
-    paramDemoMode = parameterHandler->AddParameter("DemoMode", "", true);
+    paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
     paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", false);
     paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
     std::string defaultValue = "manipulator";
@@ -108,6 +116,7 @@ void RunDemoUR10Mode()
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
+
         armGroup->UpdateCurrentState();
         //make new plan if armGroup is not planning
         if(!armGroup->IsPlanning && !armGroup->IsExecuting)
@@ -133,6 +142,9 @@ void RunSimMode()
             armGroup->PlanSimulationPath();
             armGroup->Execute();
         }
+
+        ros::spinOnce();
+        rate.sleep();
     }
 }
 
@@ -141,6 +153,8 @@ void RunNormalMode()
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
+        ros::spinOnce();
+        rate.sleep();
     }
 }
 
@@ -153,9 +167,14 @@ int main(int argc, char **argv)
     parameterHandler = new customparameter::ParameterHandler(_node);
     InitParams();
 
+    //publisher for the planning scene
+    //ros::Publisher octomap_pub = _node->advertise<moveit_msgs::PlanningScene>("/planning_scene", 1);
+    //ros::Publisher octomapDebug_pub = _node->advertise<moveit_msgs::PlanningScene>("/debug/planning_scene", 1);
+    //ros::Subscriber octomap_sub = _node->subscribe("/octomap_full", 1000, octomapCallback);
+    //ros::Subscriber jointstate_sub = _node->subscribe("/joint_states", 1000, jointStateCallback);
+
     if (paramDemoMode.GetValue())
         RunDemoMode();
-
 
     if (paramDemoUR10Mode.GetValue())
         RunDemoUR10Mode();

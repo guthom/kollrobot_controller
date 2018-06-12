@@ -13,10 +13,16 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _nodeName = "MG_" + _groupName;
     _node = new ros::NodeHandle(*parentNode, _nodeName);
 
+
     InitParameter();
 
     //init MoveIT Stuff
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
+    //TODO: Velocity Hack! Add Parameter for this
+    _moveGroup->setMaxVelocityScalingFactor(double(0.2));
+    _moveGroup->setMaxAccelerationScalingFactor(double(0.2));
+    ROS_ERROR("Reduced Speed for ROPOSE");
+
     _planningSzene = new moveit::planning_interface::PlanningSceneInterface();
 
     //init publisher
@@ -92,6 +98,7 @@ void KollrobotMoveGroup::Run()
 
 void KollrobotMoveGroup::MoveToValidRandom()
 {
+
     if(_planningThread != NULL && IsExecuting == false)
     {
         _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::MoveToValidRandomRun,this));

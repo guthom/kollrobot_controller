@@ -34,6 +34,7 @@ public:
     void MoveToValidRandom();
     void Execute();
 
+    moveit::planning_interface::PlanningSceneInterface* _planningSzene;
 private:
     //node stuff
     ros::NodeHandle* _node;
@@ -56,9 +57,9 @@ private:
     void InitMarker();
     visualization_msgs::Marker _markerTargetPose;
 
+
     //moveIt Stuff
     moveit::planning_interface::MoveGroupInterface* _moveGroup;
-    moveit::planning_interface::PlanningSceneInterface* _planningSzene;
     moveit::planning_interface::MoveGroupInterface::Plan _currentPlan;
     moveit::planning_interface::MoveGroupInterface::Plan _currentExecutedPlan;
 

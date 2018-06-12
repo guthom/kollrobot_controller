@@ -44,8 +44,16 @@ find_package(catkin REQUIRED
     geometry_msgs
     custom_parameter
     sensor_msgs
-    tf)
+    octomap_ros
+    octomap_msgs
+    tf
+    genmsg 
+    actionlib_msgs 
+    actionlib)
     
+#init python
+catkin_python_setup()
+
 #add all message files
 #add_message_files(
 #    FILES
@@ -58,19 +66,25 @@ find_package(catkin REQUIRED
 #    ${SERVICES}
 #)
 
+add_action_files(DIRECTORY action FILES PickBox.action PlaceBox.action)
+
 #generate messages 
-#generate_messages(
-#    DEPENDENCIES
-#    std_msgs
-#    geometry_msgs
-#    nav_msgs
-#)
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+   actionlib_msgs
+)
+
+
 
 #create catkin package with all needed dependencies
 catkin_package(
   #INCLUDE_DIRS include
   LIBRARIES #${PROJECT_NAME}
-  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS
+  message_runtime
+  rospy
       geometry_msgs
       nav_msgs
       custom_parameter
@@ -83,8 +97,8 @@ include_directories(include ${CATKIN_DEVEL_PREFIX}/include)
 include_directories(include ${catkin_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIR} 
     ${EIGEN_INCLUDE_DIRS}
+    ${OCTOMAP_INCLUDE_DIRS}
 )
-
 
 #SET GLOBAL DEPENDECIES and Links
 set(LINKLIBS)
@@ -92,7 +106,8 @@ set(GLOB_LINKLIBS ${catkin_LIBRARIES} )
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
     ${PROJECT_NAME}_generate_messages
-    ${catkin_EXPORTED_TARGETS}    
+    ${catkin_EXPORTED_TARGETS}
+    ${OCTOMAP_LIBRARIES}
 )
 
 #read all directories as submodules
