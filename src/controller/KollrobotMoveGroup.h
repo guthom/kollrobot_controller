@@ -1,5 +1,4 @@
-#ifndef KOLLROBOTMOVEGROUP_H
-#define KOLLROBOTMOVEGROUP_H
+#pragma once
 
 #include <ros/ros.h>
 #include <string.h>
@@ -32,6 +31,7 @@ public:
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();
+    void GoHome();
     void Execute();
 
     moveit::planning_interface::PlanningSceneInterface* _planningSzene;
@@ -68,5 +68,3 @@ private:
     customparameter::ParameterHandler* _parameterHandler;
     customparameter::Parameter<int> _param_RefreshRate;
 };
-
-#endif // KOLLROBOTMOVEGROUP_H

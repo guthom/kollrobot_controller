@@ -1,0 +1,45 @@
+<launch>
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find ropose)/worlds/ropose_real_demo_groundless_green.world"/>
+    <!-- more default parameters can be changed here -->
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+  
+  <!-- load params-->
+  <arg name="ur_limited" default="true"/>
+  <arg name="robot_name" default="ur10"/>
+  <arg name="robot_description" default="$(arg robot_name)/robot_description"/>
+
+  <!-- send robot urdf to param server -->
+  <include file="$(find ur_description)/launch/ur10_upload.launch">
+    <arg name="limited" value="$(arg ur_limited)"/>
+  </include>
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot" respawn="false"/>
+
+  <include file="$(find ur_gazebo)/launch/controller_utils.launch"/>
+
+  <rosparam file="$(find ropose)/yaml/arm_controller_ur10.yaml" command="load"/>
+  <node name="arm_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn arm_controller" respawn="false"/>
+  
+  <!-- upload robot descripton-->
+  <include file="$(find ur10_moveit_config)/launch/ur10_moveit_planning_execution.launch">
+    <arg name="sim" value="true"/>
+  </include>
+
+  <arg name="rviz_cfg" default="$(find ropose)/rvizConfig/demo_ur10_only.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cfg)"/>	
+s
+  
+  <!--node pkg="tf" type="static_transform_publisher" name="camera_link_tf" args="X Y Z qx qy qz qw /world /camera_link 1"/-->
+  <!--node pkg="tf2_ros" type="static_transform_publisher" name="base_link_tf" args="0 -3 1 -0.0705648, -0.070621, 0.703294, 0.7038543 /world /base_camera_link"/-->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_tf" args="0 -3 1 0 0 0 /world /base_camera_link"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf" args="0 0 0 0 0 -1.77 /base_camera_link /camera_link"/>
+
+</launch>

@@ -60,10 +60,14 @@ void KollrobotMoveGroup::PlanToPose(geometry_msgs::Pose targetPose)
     _moveGroup->setPoseTarget(targetPose);
     _markerTargetPose.pose = targetPose;
 
+    RunPlanning();
+    /*
+
     if(_planningThread != NULL)
     {
         _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::RunPlanning,this));
     }
+     */
 }
 
 void KollrobotMoveGroup::PublishMarker()
@@ -78,10 +82,20 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
     _moveGroup->setPoseTarget(targetPose);
     _markerTargetPose.pose = targetPose;
 
+    RunPlanningExecute();
+
+    /*
+
     if(_planningThread != NULL && IsExecuting == false)
     {
         _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::RunPlanningExecute,this));
     }
+
+    */
+}
+
+void KollrobotMoveGroup::GoHome()
+{
 }
 
 void KollrobotMoveGroup::Run()
@@ -98,11 +112,13 @@ void KollrobotMoveGroup::Run()
 
 void KollrobotMoveGroup::MoveToValidRandom()
 {
-
+    MoveToValidRandomRun();
+    /*
     if(_planningThread != NULL && IsExecuting == false)
     {
         _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::MoveToValidRandomRun,this));
     }
+     */
 }
 
 void KollrobotMoveGroup::MoveToValidRandomRun()
@@ -140,7 +156,7 @@ void KollrobotMoveGroup::UpdateCurrentState()
 
 void KollrobotMoveGroup::PlanSimulationPath()
 {
-//TODO: Implemetn if neccessary
+//TODO: Implement if neccessary
 }
 
 KollrobotMoveGroup::~KollrobotMoveGroup()

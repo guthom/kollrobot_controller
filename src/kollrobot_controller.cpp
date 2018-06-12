@@ -9,9 +9,7 @@
 #include <octomap_msgs/Octomap.h>
 #include <octomap/octomap.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
-#include <kollrobot_controller/PickBoxAction.h>
-#include <kollrobot_controller/PlaceBoxAction.h>
-#include <actionlib/server/simple_action_server.h>
+#include "controller/PickBoxActionClass.h"
 #include <sensor_msgs/JointState.h>
 
 //common stuff
@@ -32,6 +30,9 @@ customparameter::Parameter<bool> paramNormalMode;
 
 KollrobotMoveGroup* armGroup;
 
+PickBoxActionClass* pickBoxAction;
+
+
 
 void InitParams()
 {
@@ -41,9 +42,14 @@ void InitParams()
     paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
     paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
     paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", false);
-    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
+    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", true);
     std::string defaultValue = "manipulator";
     paramGroupName = parameterHandler->AddParameter("GroupName", "", defaultValue);
+}
+
+void InitActions()
+{
+    pickBoxAction = new PickBoxActionClass(_node, armGroup);
 }
 
 float RandomFloat(float a, float b) {
@@ -55,8 +61,6 @@ float RandomFloat(float a, float b) {
 
 void RunDemoMode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
-
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
@@ -111,8 +115,6 @@ void RunDemoMode()
 
 void RunDemoUR10Mode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
-
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
@@ -132,8 +134,6 @@ void RunDemoUR10Mode()
 
 void RunSimMode()
 {
-    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
-
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
@@ -167,11 +167,15 @@ int main(int argc, char **argv)
     parameterHandler = new customparameter::ParameterHandler(_node);
     InitParams();
 
+    armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
+    InitActions();
+
     //publisher for the planning scene
     //ros::Publisher octomap_pub = _node->advertise<moveit_msgs::PlanningScene>("/planning_scene", 1);
     //ros::Publisher octomapDebug_pub = _node->advertise<moveit_msgs::PlanningScene>("/debug/planning_scene", 1);
     //ros::Subscriber octomap_sub = _node->subscribe("/octomap_full", 1000, octomapCallback);
     //ros::Subscriber jointstate_sub = _node->subscribe("/joint_states", 1000, jointStateCallback);
+
 
     if (paramDemoMode.GetValue())
         RunDemoMode();

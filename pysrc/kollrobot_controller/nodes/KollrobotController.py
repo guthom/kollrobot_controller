@@ -6,7 +6,6 @@ import rospy
 projectDir = os.path.join(os.path.dirname(__file__), '../')
 
 sys.path.append(projectDir)
-sys.path.append(projectDir + "ropose/")
 
 import pysrc.kollrobot_controller.nodes.nodeconfig as config
 
@@ -21,7 +20,6 @@ class KollrobotController:
     def Init(self):
         # init node disable signal for internal shutdown
         rospy.init_node(config.nodeName, anonymous=True, disable_signals=True)
-
 
         # tfStuff
         self._tfBuffer = tf2_ros.Buffer()

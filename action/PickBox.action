@@ -1,0 +1,9 @@
+# Define the goal
+geometry_msgs/Pose box_pose
+---
+# Define the result
+bool succeed
+---
+# Define a feedback message
+string current_state
+float32 percent_complete
