@@ -6,6 +6,9 @@
 #include <ros/ros.h>
 #include "KollrobotMoveGroup.h"
 #include <kollrobot_controller/PickBoxAction.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <moveit_msgs/RobotTrajectory.h>
+#include <vector>
 #include <actionlib/server/simple_action_server.h>
 
 
@@ -22,9 +25,14 @@ private:
     kollrobot_controller::PickBoxFeedback _feedback;
     kollrobot_controller::PickBoxResult _result;
 
-    void PublishFeedback(std::string state, float percent);
+    bool CheckBoxAvailability(std::string boxFrameID);
+
+    void PublishFeedback(std::string state, float percent, bool warn);
     void Init();
 
+    //methods to calculate positions/trajecotries ect
+    geometry_msgs::PoseStamped CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose);
+    moveit_msgs::RobotTrajectory CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose);
 
 public:
     PickBoxActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);

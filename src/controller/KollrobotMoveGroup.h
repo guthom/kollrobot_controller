@@ -7,11 +7,13 @@
 
 #include <custom_parameter/parameterHandler.h>
 #include <custom_parameter/parameter.h>
-
+#include <vector>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit_msgs/RobotTrajectory.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <visualization_msgs/MarkerArray.h>
 
 class KollrobotMoveGroup
 {
@@ -25,9 +27,15 @@ public:
     bool IsPlanning = false;
     bool PlanValid = false;
     bool IsExecuting = false;
+    bool IsBusy();
 
     void PlanToPose(geometry_msgs::Pose targetPose);
+    void PlanToPose(geometry_msgs::PoseStamped targetPose);
     void PlanToPoseExecute(geometry_msgs::Pose targetPose);
+    void PlanToPoseExecute(geometry_msgs::PoseStamped targetPose);
+    moveit_msgs::RobotTrajectory ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints);
+    void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
+
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();
@@ -54,7 +62,9 @@ private:
     //publisher
     void PublishMarker();
     ros::Publisher _pubTargetPose;
+    ros::Publisher _pubWaypoints;
     void InitMarker();
+    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints);
     visualization_msgs::Marker _markerTargetPose;
 
 

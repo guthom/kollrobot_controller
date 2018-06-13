@@ -1,5 +1,6 @@
 # Define the goal
-geometry_msgs/Pose box_pose
+geometry_msgs/PoseStamped box_pose
+string box_frameID
 ---
 # Define the result
 bool succeed

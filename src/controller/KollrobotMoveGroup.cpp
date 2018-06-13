@@ -1,6 +1,4 @@
 #include "KollrobotMoveGroup.h"
-#include <boost/thread.hpp>
-
 
 KollrobotMoveGroup::KollrobotMoveGroup(ros::NodeHandle* parentNode, customparameter::ParameterHandler* parameterHandler, std::string groupName)
     : _parameterHandler(parameterHandler), _groupName(groupName)
@@ -27,6 +25,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 
     //init publisher
     _pubTargetPose = _node->advertise<visualization_msgs::Marker>(_node->getNamespace() + "/TargetPose", 100);
+    _pubWaypoints = _node->advertise<visualization_msgs::MarkerArray>(_node->getNamespace() + "/Waypoints", 100);
 
     //run node
     _nodeThread = new boost::thread(boost::bind(&KollrobotMoveGroup::Run,this));
@@ -61,13 +60,14 @@ void KollrobotMoveGroup::PlanToPose(geometry_msgs::Pose targetPose)
     _markerTargetPose.pose = targetPose;
 
     RunPlanning();
-    /*
+}
 
-    if(_planningThread != NULL)
-    {
-        _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::RunPlanning,this));
-    }
-     */
+void KollrobotMoveGroup::PlanToPose(geometry_msgs::PoseStamped targetPose)
+{
+    _moveGroup->setPoseTarget(targetPose);
+    _markerTargetPose.pose = targetPose.pose;
+
+    RunPlanning();
 }
 
 void KollrobotMoveGroup::PublishMarker()
@@ -83,19 +83,66 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
     _markerTargetPose.pose = targetPose;
 
     RunPlanningExecute();
+}
 
-    /*
+void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory)
+{
+    _currentPlan.trajectory_ = trajectory;
+    Execute();
+}
 
-    if(_planningThread != NULL && IsExecuting == false)
+visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints)
+{
+    visualization_msgs::MarkerArray markerArray;
+
+    visualization_msgs::Marker baseMarker;
+    baseMarker.id = 0;
+    baseMarker.header.frame_id = "base_link";
+    baseMarker.type = visualization_msgs::Marker::SPHERE;
+    baseMarker.scale.x = 0.02;
+    baseMarker.scale.y = 0.02;
+    baseMarker.scale.z = 0.02;
+    baseMarker.color.a = 1.0;
+    baseMarker.color.r = 0.0;
+    baseMarker.color.g = 0.0;
+    baseMarker.color.b = 1.0;
+
+    for(int i = 0; i < waypoints.size(); i++)
     {
-        _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::RunPlanningExecute,this));
+        baseMarker.id += 1;
+        baseMarker.pose = waypoints[i];
+        markerArray.markers.push_back(baseMarker);
     }
 
-    */
+    return markerArray;
+}
+
+moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints)
+{
+    visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(waypoints);
+    _pubWaypoints.publish(waypointMarker);
+
+    const double jump_threshold = 0.0;
+    const double eef_step = 0.005;
+
+    moveit_msgs::RobotTrajectory trajectory;
+    _moveGroup->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+
+    return trajectory;
+}
+
+void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::PoseStamped targetPose)
+{
+    _moveGroup->setPoseTarget(targetPose);
+    _markerTargetPose.pose = targetPose.pose;
+
+    RunPlanningExecute();
 }
 
 void KollrobotMoveGroup::GoHome()
 {
+    _moveGroup->setNamedTarget("home");
+    RunPlanningExecute();
 }
 
 void KollrobotMoveGroup::Run()
@@ -113,12 +160,6 @@ void KollrobotMoveGroup::Run()
 void KollrobotMoveGroup::MoveToValidRandom()
 {
     MoveToValidRandomRun();
-    /*
-    if(_planningThread != NULL && IsExecuting == false)
-    {
-        _planningThread = new boost::thread(boost::bind(&KollrobotMoveGroup::MoveToValidRandomRun,this));
-    }
-     */
 }
 
 void KollrobotMoveGroup::MoveToValidRandomRun()
@@ -127,6 +168,11 @@ void KollrobotMoveGroup::MoveToValidRandomRun()
     IsExecuting = true;
     _moveGroup->move();
     IsExecuting = false;
+}
+
+bool KollrobotMoveGroup::IsBusy()
+{
+    return IsExecuting || IsPlanning;
 }
 
 void KollrobotMoveGroup::Execute()
