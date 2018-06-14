@@ -91,13 +91,14 @@ void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajecto
     Execute();
 }
 
-visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints)
+visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
+                                                                         std::string frameID="base_link")
 {
     visualization_msgs::MarkerArray markerArray;
 
     visualization_msgs::Marker baseMarker;
     baseMarker.id = 0;
-    baseMarker.header.frame_id = "base_link";
+    baseMarker.header.frame_id = frameID;
     baseMarker.type = visualization_msgs::Marker::SPHERE;
     baseMarker.scale.x = 0.02;
     baseMarker.scale.y = 0.02;
@@ -127,6 +128,7 @@ moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vecto
 
     moveit_msgs::RobotTrajectory trajectory;
     _moveGroup->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+    trajectory.joint_trajectory.header.frame_id = "simulatedQR";
 
     return trajectory;
 }
@@ -134,6 +136,7 @@ moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vecto
 void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::PoseStamped targetPose)
 {
     _moveGroup->setPoseTarget(targetPose);
+    _markerTargetPose.header.frame_id = targetPose.header.frame_id;
     _markerTargetPose.pose = targetPose.pose;
 
     RunPlanningExecute();

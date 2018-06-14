@@ -30,8 +30,8 @@ void PickBoxActionClass::PublishFeedback(std::string state, float percent, bool 
 geometry_msgs::PoseStamped PickBoxActionClass::CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose)
 {
     geometry_msgs::PoseStamped prePickPose(targetPose);
-    prePickPose.pose.position.z -= 0.2;
-    prePickPose.pose.position.x -= 0.2;
+    prePickPose.pose.position.z += 0.1;
+    prePickPose.pose.position.x -= 0.05;
     //force quaternion
     //TODO: Find a better way to to this
     //prePickPose.pose.orientation.x = 1.0;
@@ -47,13 +47,13 @@ moveit_msgs::RobotTrajectory PickBoxActionClass::CalculatePickTrajectory(geometr
     std::vector<geometry_msgs::Pose> waypoints;
     waypoints.push_back(prePickPose.pose);
 
-    //create test waypoints
-    for (int i = 0; i < 5; i++)
-    {
-        geometry_msgs::Pose oldPose = waypoints[i];
-        oldPose.position.x += 0.1;
-        waypoints.push_back(oldPose);
-    }
+    geometry_msgs::Pose pose1 = waypoints[0];
+    pose1.position.z = 0.0;
+    waypoints.push_back(pose1);
+
+    geometry_msgs::Pose pose2 = waypoints[1];
+    pose2.position.x = 0.0;
+    waypoints.push_back(pose2);
 
     moveit_msgs::RobotTrajectory trajecotry = _moveGroup->ComputeCartesianpath(waypoints);
     trajecotry.joint_trajectory.header.frame_id = prePickPose.header.frame_id;
@@ -64,7 +64,7 @@ moveit_msgs::RobotTrajectory PickBoxActionClass::CalculatePickTrajectory(geometr
 
 bool PickBoxActionClass::CheckBoxAvailability(std::string boxFrameID)
 {
-    return true;
+    return _transformationHandler.FrameExist(boxFrameID);
 }
 
 void PickBoxActionClass::ExecuteActionCallback(const kollrobot_controller::PickBoxGoalConstPtr& goal)
@@ -85,7 +85,8 @@ void PickBoxActionClass::ExecuteActionCallback(const kollrobot_controller::PickB
 
     if(!CheckBoxAvailability(newGoal->box_frameID))
     {
-        PublishFeedback("Box Transformation is not available, can't pick it!", 0.0);
+        std::string msg = "Box Transformation - " + newGoal->box_frameID + " - is not available, can't pick it!";
+        PublishFeedback(msg, 0.0);
         success = false;
         _server->setSucceeded(_result);
         return;

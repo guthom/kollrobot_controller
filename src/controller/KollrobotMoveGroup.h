@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ros/ros.h>
-#include <string.h>
+#include <cstring>
 
 #include <boost/thread.hpp>
 
@@ -64,7 +64,8 @@ private:
     ros::Publisher _pubTargetPose;
     ros::Publisher _pubWaypoints;
     void InitMarker();
-    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints);
+    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
+                                                         std::string frameID);
     visualization_msgs::Marker _markerTargetPose;
 
 

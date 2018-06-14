@@ -1,7 +1,7 @@
-set(COMPONENT_NAME "kollrobot_controller_controller")
+set(COMPONENT_NAME "kollrobot_helper")
 
 set (SUBMODULES 
-    ${COMPONENT_NAME} 
+    ${COMPONENT_NAME}
     PARENT_SCOPE
 )
 
@@ -25,21 +25,21 @@ set(SOURCE
 set(HEADERS
    ${HEADERS}
    ${SUB_HEADERS}
-   PARENT_SCOPEhas
+   PARENT_SCOPE
 )
 #Add Local Dependencies
 set(LOCAL_DEPENDENCIES)
-set(LOCAL_LINKLIBS kollrobot_helper)
+set(LOCAL_LINKLIBS)
 
 #Create Libname list
 list(APPEND LIBNAMES)
 
 #add libraries if needed
-SET(LIBNAME kollrobot_controller_controller)
+SET(LIBNAME ${COMPONENT_NAME})
 list(APPEND LIBNAMES ${LIBNAME})
-add_library(${LIBNAME} KollrobotMoveGroup.cpp PickBoxActionClass.cpp)
-add_dependencies(${LIBNAME} ${GLOB_DEPENDENCIES} ${LOCAL_DEPENDENCIES})
-target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS}) 
+add_library(${LIBNAME} TransformationHandler.cpp)
+#add_dependencies(${LIBNAME} ${GLOB_DEPENDENCIES} ${LOCAL_DEPENDENCIES})
+#target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS})
 
 set(GLOB_DEPENDENCIES
     ${GLOB_DEPENDENCIES} 

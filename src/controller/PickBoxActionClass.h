@@ -5,6 +5,7 @@
 
 #include <ros/ros.h>
 #include "KollrobotMoveGroup.h"
+#include "../helper/TransformationHandler.h"
 #include <kollrobot_controller/PickBoxAction.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <moveit_msgs/RobotTrajectory.h>
@@ -21,6 +22,7 @@ private:
     std::string _actionName = "PickBoxAction";
     PickBoxActionServer* _server;
     KollrobotMoveGroup* _moveGroup;
+    TransformationHandler _transformationHandler;
 
     kollrobot_controller::PickBoxFeedback _feedback;
     kollrobot_controller::PickBoxResult _result;
