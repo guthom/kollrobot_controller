@@ -161,6 +161,34 @@ geometry_msgs::TransformStamped TransformationHandler::GetTransform(std::string 
     return transformStamped;
 }
 
+geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::Pose pose, std::string fromFrame,
+                                                                std::string toFrame)
+{
+
+}
+
+geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::PoseStamped transformPose,
+                                                                std::string toFrame)
+{
+}
+
+
+geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::TransformStamped transform,
+                                                                geometry_msgs::PoseStamped)
+{
+
+}
+
+geometry_msgs::Pose TransformationHandler::TransformPose(geometry_msgs::TransformStamped transform,
+                                                                geometry_msgs::Pose pose)
+{
+    geometry_msgs::PoseStamped ret;
+    ret.pose = pose;
+    tf2::doTransform(ret, ret, transform);
+
+    return ret.pose;
+}
+
 
 bool TransformationHandler::FrameExist(std::string frameName)
 {

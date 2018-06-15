@@ -9,14 +9,11 @@
 #include <boost/bind.hpp>
 #include <iostream>
 #include <ros/ros.h>
+
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include <geometry_msgs/Transform.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Pose.h>
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 class TransformationHandler {
 
 private:
@@ -61,6 +58,12 @@ public:
     bool SendStaticTransform(geometry_msgs::Transform transform, std::string fromFrame, std::string toFrame);
     bool SendStaticTransform(geometry_msgs::PoseStamped transformPose, std::string toFrame);
     bool SendStaticTransform(geometry_msgs::Pose pose, std::string fromFrame, std::string toFrame);
+
+    geometry_msgs::PoseStamped TransformPose(geometry_msgs::Pose pose, std::string fromFrame, std::string toFrame);
+    geometry_msgs::PoseStamped TransformPose(geometry_msgs::PoseStamped transformPose, std::string toFrame);
+    geometry_msgs::PoseStamped TransformPose(geometry_msgs::TransformStamped transform, geometry_msgs::PoseStamped);
+    geometry_msgs::Pose TransformPose(geometry_msgs::TransformStamped transform, geometry_msgs::Pose);
+
 
     geometry_msgs::TransformStamped GetTransform(std::string fromFrame, std::string toFrame);
 

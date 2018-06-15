@@ -22,7 +22,7 @@ private:
     std::string _actionName = "PickBoxAction";
     PickBoxActionServer* _server;
     KollrobotMoveGroup* _moveGroup;
-    TransformationHandler _transformationHandler;
+    TransformationHandler* _transformationHandler;
 
     kollrobot_controller::PickBoxFeedback _feedback;
     kollrobot_controller::PickBoxResult _result;

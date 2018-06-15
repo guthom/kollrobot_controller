@@ -100,9 +100,9 @@ visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::ve
     baseMarker.id = 0;
     baseMarker.header.frame_id = frameID;
     baseMarker.type = visualization_msgs::Marker::SPHERE;
-    baseMarker.scale.x = 0.02;
-    baseMarker.scale.y = 0.02;
-    baseMarker.scale.z = 0.02;
+    baseMarker.scale.x = 0.03;
+    baseMarker.scale.y = 0.03;
+    baseMarker.scale.z = 0.03;
     baseMarker.color.a = 1.0;
     baseMarker.color.r = 0.0;
     baseMarker.color.g = 0.0;
@@ -127,8 +127,8 @@ moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vecto
     const double eef_step = 0.005;
 
     moveit_msgs::RobotTrajectory trajectory;
-    _moveGroup->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
     trajectory.joint_trajectory.header.frame_id = "simulatedQR";
+    _moveGroup->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
 
     return trajectory;
 }
