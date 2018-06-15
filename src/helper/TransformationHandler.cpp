@@ -5,11 +5,31 @@
 #include "TransformationHandler.h"
 
 
-TransformationHandler::TransformationHandler()
+TransformationHandler::TransformationHandler(ros::NodeHandle* parentNode, int refreshRate) :
+        _iRefreshRate(refreshRate)
 {
+    _node = new ros::NodeHandle(*parentNode, _nodeName);
 
+    Init();
+    RunThread();
 }
 
+void TransformationHandler::RunThread()
+{
+    //run node
+    _nodeThread = new boost::thread(boost::bind(&TransformationHandler::Run, this));
+}
+
+void TransformationHandler::Run()
+{
+    ros::Rate rate(_iRefreshRate);
+    while(_node->ok())
+    {
+        sigNodeCircle();
+        ros::spinOnce();
+        rate.sleep();
+    }
+}
 
 void TransformationHandler::Init()
 {
@@ -17,7 +37,6 @@ void TransformationHandler::Init()
     _tfBroadcaster = new tf2_ros::TransformBroadcaster();
     _tfStaticTransformBroadcaster = new tf2_ros::StaticTransformBroadcaster();
 }
-
 
 geometry_msgs::Transform TransformationHandler::PoseToTransform(geometry_msgs::Pose pose)
 {
@@ -37,8 +56,10 @@ geometry_msgs::TransformStamped TransformationHandler::TransformToStamped(geomet
                                                                           std::string toFrame)
 {
     geometry_msgs::TransformStamped ret;
+    ret.transform = transform;
     ret.header.frame_id = fromFrame;
     ret.child_frame_id = toFrame;
+    return ret;
 }
 
 geometry_msgs::TransformStamped TransformationHandler::PoseToTransformStamped(geometry_msgs::Pose pose,
@@ -56,6 +77,7 @@ bool TransformationHandler::SendTransform(geometry_msgs::TransformStamped transf
     try
     {
         _tfBroadcaster->sendTransform(transform);
+        ROS_INFO_STREAM("Send new transform from " << transform.header.frame_id << " to " << transform.child_frame_id);
     }
     catch (tf2::TransformException &ex)
     {
@@ -92,6 +114,8 @@ bool TransformationHandler::SendStaticTransform(geometry_msgs::TransformStamped 
     try
     {
         _tfStaticTransformBroadcaster->sendTransform(transform);
+        ROS_INFO_STREAM("Send new static transform from " << transform.header.frame_id
+                                                          << " to " << transform.child_frame_id);
     }
     catch (tf2::TransformException &ex)
     {

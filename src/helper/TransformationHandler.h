@@ -4,6 +4,10 @@
 #pragma once
 
 #include <cstring>
+#include <boost/thread/thread.hpp>
+#include <boost/signals2.hpp>
+#include <boost/bind.hpp>
+#include <iostream>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -13,11 +17,18 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 
-
 class TransformationHandler {
 
 private:
     void Init();
+    //ros stuff
+    int _iRefreshRate;
+    std::string _nodeName = "TransformationHandler";
+    ros::NodeHandle* _node;
+    boost::thread* _nodeThread;
+
+    void RunThread();
+    void Run();
 
     //tfStuff
     tf2_ros::Buffer _tfBuffer;
@@ -26,8 +37,10 @@ private:
     tf2_ros::StaticTransformBroadcaster* _tfStaticTransformBroadcaster;
 
 public:
-    TransformationHandler();
+    TransformationHandler(ros::NodeHandle* parentNode, int refreshRate = 30);
     ~TransformationHandler();
+
+    boost::signals2::signal<void()> sigNodeCircle;
 
     static geometry_msgs::Transform PoseToTransform(geometry_msgs::Pose pose);
 
