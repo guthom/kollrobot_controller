@@ -13,6 +13,7 @@
 #include <moveit/planning_interface/planning_interface.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include "../helper/TransformationHandler.h"
 #include <visualization_msgs/MarkerArray.h>
 
 class KollrobotMoveGroup
@@ -33,8 +34,11 @@ public:
     void PlanToPose(geometry_msgs::PoseStamped targetPose);
     void PlanToPoseExecute(geometry_msgs::Pose targetPose);
     void PlanToPoseExecute(geometry_msgs::PoseStamped targetPose);
+    void PlanToPositionExecute(geometry_msgs::PointStamped targetPose);
+    void PlanToPositionExecute(geometry_msgs::Point targetPose);
     moveit_msgs::RobotTrajectory ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints);
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
+    void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
     void PlanSimulationPath();
     void UpdateCurrentState();
@@ -50,8 +54,12 @@ private:
     void Run();
     boost::thread* _nodeThread;
 
+    TransformationHandler* _transformationHandler;
+
     std::string _groupName;
     void Init(ros::NodeHandle* parentNode);
+    moveit_msgs::Constraints _constraints;
+    void SetConstraints();
     void InitParameter();
 
     void RunPlanning();
@@ -66,6 +74,7 @@ private:
     void InitMarker();
     visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
                                                          std::string frameID);
+    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::PoseStamped> waypoints);
     visualization_msgs::Marker _markerTargetPose;
 
 

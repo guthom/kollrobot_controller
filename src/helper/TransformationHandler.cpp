@@ -164,19 +164,42 @@ geometry_msgs::TransformStamped TransformationHandler::GetTransform(std::string 
 geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::Pose pose, std::string fromFrame,
                                                                 std::string toFrame)
 {
+    auto transform = GetTransform(fromFrame, toFrame);
+    geometry_msgs::PoseStamped newPose;
+    newPose.pose = pose;
+    tf2::doTransform(newPose, newPose, transform);
+    return newPose;
+
+}
+
+geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::PoseStamped pose, std::string fromFrame,
+                                                                std::string toFrame)
+{
+    auto transform = GetTransform(fromFrame, toFrame);
+    geometry_msgs::PoseStamped newPose;
+    newPose.pose = pose.pose;
+    tf2::doTransform(newPose, newPose, transform);
+    return newPose;
 
 }
 
 geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::PoseStamped transformPose,
                                                                 std::string toFrame)
 {
+    auto transform = GetTransform(transformPose.header.frame_id, toFrame);
+    geometry_msgs::PoseStamped newPose;
+    newPose.pose = transformPose.pose;
+
+    tf2::doTransform(transformPose, newPose, transform);
+    return newPose;
 }
 
 
 geometry_msgs::PoseStamped TransformationHandler::TransformPose(geometry_msgs::TransformStamped transform,
-                                                                geometry_msgs::PoseStamped)
+                                                                geometry_msgs::PoseStamped pose)
 {
-
+    tf2::doTransform(pose, pose, transform);
+    return pose;
 }
 
 geometry_msgs::Pose TransformationHandler::TransformPose(geometry_msgs::TransformStamped transform,
@@ -185,8 +208,7 @@ geometry_msgs::Pose TransformationHandler::TransformPose(geometry_msgs::Transfor
     geometry_msgs::PoseStamped ret;
     ret.pose = pose;
     tf2::doTransform(ret, ret, transform);
-
-    return ret.pose;
+    return pose;
 }
 
 

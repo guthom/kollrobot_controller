@@ -62,6 +62,9 @@ public:
     geometry_msgs::PoseStamped TransformPose(geometry_msgs::Pose pose, std::string fromFrame, std::string toFrame);
     geometry_msgs::PoseStamped TransformPose(geometry_msgs::PoseStamped transformPose, std::string toFrame);
     geometry_msgs::PoseStamped TransformPose(geometry_msgs::TransformStamped transform, geometry_msgs::PoseStamped);
+    geometry_msgs::PoseStamped TransformPose(geometry_msgs::PoseStamped pose, std::string fromFrame,
+                                             std::string toFrame);
+
     geometry_msgs::Pose TransformPose(geometry_msgs::TransformStamped transform, geometry_msgs::Pose);
 
 

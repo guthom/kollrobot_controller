@@ -28,13 +28,16 @@ private:
     kollrobot_controller::PickBoxResult _result;
 
     bool CheckBoxAvailability(std::string boxFrameID);
+    geometry_msgs::Quaternion calculatePickingOrientation();
 
     void PublishFeedback(std::string state, float percent, bool warn);
     void Init();
 
     //methods to calculate positions/trajecotries ect
     geometry_msgs::PoseStamped CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose);
+    geometry_msgs::PoseStamped CalculatePrePickPosition(std::string targetFrame);
     moveit_msgs::RobotTrajectory CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose);
+    std::vector<geometry_msgs::PoseStamped> CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose);
 
 public:
     PickBoxActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);

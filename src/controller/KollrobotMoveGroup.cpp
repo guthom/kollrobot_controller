@@ -11,6 +11,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _nodeName = "MG_" + _groupName;
     _node = new ros::NodeHandle(*parentNode, _nodeName);
 
+    _transformationHandler = new TransformationHandler(_node);
 
     InitParameter();
 
@@ -30,7 +31,52 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     //run node
     _nodeThread = new boost::thread(boost::bind(&KollrobotMoveGroup::Run,this));
 
+
+    GoHome();
+    SetConstraints();
+
     InitMarker();
+}
+
+void KollrobotMoveGroup::SetConstraints()
+{
+    _constraints.name = "BoxUP";
+
+    //set constraint to keep box
+
+    /*
+    moveit_msgs::JointConstraint jc;
+    jc.joint_name = "wrist_2_joint";
+    jc.position = -1.58;
+    jc.tolerance_above = 0.5;
+    jc.tolerance_below = 0.5;
+
+    constraints.joint_constraints.push_back(jc);
+    */
+    std::vector<std::string> linkNames = _moveGroup->getLinkNames();
+    geometry_msgs::PoseStamped currentPose = _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
+    currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
+    moveit_msgs::OrientationConstraint ocm;
+    ocm.link_name = linkNames[linkNames.size()-2];
+    ocm.header.frame_id = "base_link";
+    ocm.orientation = currentPose.pose.orientation;
+
+    /*
+    ocm.orientation.x = -0.28126;
+    ocm.orientation.y = -0.25993;
+    ocm.orientation.z = -0.65244;
+    ocm.orientation.w = 0.65395;
+    */
+
+    ocm.absolute_x_axis_tolerance = M_PI;
+    ocm.absolute_y_axis_tolerance = M_PI;
+    ocm.absolute_z_axis_tolerance = M_PI; //ignore this axis
+    ocm.weight = 1.0;
+
+    _constraints.orientation_constraints.push_back(ocm);
+
+    _moveGroup->setPathConstraints(_constraints);
+
 }
 
 void KollrobotMoveGroup::InitParameter()
@@ -66,6 +112,7 @@ void KollrobotMoveGroup::PlanToPose(geometry_msgs::PoseStamped targetPose)
 {
     _moveGroup->setPoseTarget(targetPose);
     _markerTargetPose.pose = targetPose.pose;
+    _markerTargetPose.header.frame_id = targetPose.header.frame_id;
 
     RunPlanning();
 }
@@ -81,7 +128,23 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::Pose targetPose)
 {
     _moveGroup->setPoseTarget(targetPose);
     _markerTargetPose.pose = targetPose;
+    RunPlanningExecute();
+}
 
+
+void KollrobotMoveGroup::PlanToPositionExecute(geometry_msgs::PointStamped targetPose)
+{
+    _moveGroup->clearPoseTargets();
+    _moveGroup->setPositionTarget(targetPose.point.x,targetPose.point.y,targetPose.point.z);
+    _markerTargetPose.pose.position = targetPose.point;
+    RunPlanningExecute();
+}
+
+void KollrobotMoveGroup::PlanToPositionExecute(geometry_msgs::Point targetPose)
+{
+    _moveGroup->clearPoseTargets();
+    _moveGroup->setPositionTarget(targetPose.x,targetPose.y,targetPose.z);
+    _markerTargetPose.pose.position = targetPose;
     RunPlanningExecute();
 }
 
@@ -90,6 +153,20 @@ void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajecto
     _currentPlan.trajectory_ = trajectory;
     Execute();
 }
+
+void KollrobotMoveGroup::ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses)
+{
+    visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(poses);
+    _pubWaypoints.publish(waypointMarker);
+
+    for(int i = 0; i < poses.size(); i++)
+    {
+        PlanToPose(poses[i]);
+        Execute();
+    }
+
+}
+
 
 visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
                                                                          std::string frameID="base_link")
@@ -118,17 +195,42 @@ visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(std::ve
     return markerArray;
 }
 
+visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(
+        std::vector<geometry_msgs::PoseStamped> waypoints)
+{
+    visualization_msgs::MarkerArray markerArray;
+
+    visualization_msgs::Marker baseMarker;
+    baseMarker.id = 0;
+    baseMarker.type = visualization_msgs::Marker::SPHERE;
+    baseMarker.scale.x = 0.03;
+    baseMarker.scale.y = 0.03;
+    baseMarker.scale.z = 0.03;
+    baseMarker.color.a = 1.0;
+    baseMarker.color.r = 0.0;
+    baseMarker.color.g = 0.0;
+    baseMarker.color.b = 1.0;
+
+    for(int i = 0; i < waypoints.size(); i++)
+    {
+        baseMarker.id += 1;
+        baseMarker.pose = waypoints[i].pose;
+        baseMarker.header.frame_id = waypoints[i].header.frame_id;
+        markerArray.markers.push_back(baseMarker);
+    }
+
+    return markerArray;
+}
+
 moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints)
 {
     visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(waypoints);
     _pubWaypoints.publish(waypointMarker);
 
-    const double jump_threshold = 0.0;
-    const double eef_step = 0.005;
-
     moveit_msgs::RobotTrajectory trajectory;
     trajectory.joint_trajectory.header.frame_id = "simulatedQR";
-    _moveGroup->computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+
+    _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory, _moveGroup->getPathConstraints());
 
     return trajectory;
 }
