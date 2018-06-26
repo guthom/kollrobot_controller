@@ -42,14 +42,12 @@ add_library(${LIBNAME} TransformationHandler.cpp)
 #target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS})
 
 set(GLOB_DEPENDENCIES
-    ${GLOB_DEPENDENCIES} 
-    ${LIBNAME} 
+    ${GLOB_DEPENDENCIES}
     PARENT_SCOPE
 )
 
 set(GLOB_LINKLIBS
    ${GLOB_LINKLIBS}
-   ${LIBNAME}
    PARENT_SCOPE
 )
 

@@ -1,4 +1,4 @@
-set(COMPONENT_NAME "kollrobot_controller_controller")
+set(COMPONENT_NAME "kollrobot_controller_actions")
 
 set (SUBMODULES 
     ${COMPONENT_NAME} 
@@ -29,15 +29,15 @@ set(HEADERS
 )
 #Add Local Dependencies
 set(LOCAL_DEPENDENCIES)
-set(LOCAL_LINKLIBS kollrobot_helper)
+set(LOCAL_LINKLIBS kollrobot_controller_controller kollrobot_controller_actions)
 
 #Create Libname list
 list(APPEND LIBNAMES)
 
 #add libraries if needed
-SET(LIBNAME ${COMPONENT_NAME})
+SET(LIBNAME ${COMPONENT_NAME} )
 list(APPEND LIBNAMES ${LIBNAME})
-add_library(${LIBNAME} KollrobotMoveGroup.cpp)
+add_library(${LIBNAME} BaseActionClass.cpp PickBoxActionClass.cpp GoPositionActionClass.cpp)
 add_dependencies(${LIBNAME} ${GLOB_DEPENDENCIES} ${LOCAL_DEPENDENCIES})
 target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS}) 
 

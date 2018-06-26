@@ -4,13 +4,13 @@
 
 #include <custom_parameter/parameterHandler.h>
 #include <custom_parameter/parameter.h>
+#include <octomap_msgs/Octomap.h>
+#include <sensor_msgs/JointState.h>
+#include <moveit_msgs/ApplyPlanningScene.h>
 
 #include "controller/KollrobotMoveGroup.h"
-#include <octomap_msgs/Octomap.h>
-#include <octomap/octomap.h>
-#include <moveit_msgs/ApplyPlanningScene.h>
-#include "controller/PickBoxActionClass.h"
-#include <sensor_msgs/JointState.h>
+#include "actions/PickBoxActionClass.h"
+#include "actions/GoPositionActionClass.h"
 
 //common stuff
 float iRefreshRate = 0.2;
@@ -30,9 +30,8 @@ customparameter::Parameter<bool> paramNormalMode;
 
 KollrobotMoveGroup* armGroup;
 
-PickBoxActionClass* pickBoxAction;
-
-
+PickBoxAction::PickBoxActionClass* pickBoxAction;
+GoPositionAction::GoPositionActionClass* goPositionAction;
 
 void InitParams()
 {
@@ -49,7 +48,8 @@ void InitParams()
 
 void InitActions()
 {
-    pickBoxAction = new PickBoxActionClass(_node, armGroup);
+    pickBoxAction = new PickBoxAction::PickBoxActionClass(_node, armGroup);
+    goPositionAction = new GoPositionAction::GoPositionActionClass(_node, armGroup);
 }
 
 float RandomFloat(float a, float b) {
@@ -167,7 +167,6 @@ int main(int argc, char **argv)
     //init params
     parameterHandler = new customparameter::ParameterHandler(_node);
     InitParams();
-
     armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
     InitActions();
 

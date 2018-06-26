@@ -35,6 +35,14 @@ foreach(service ${RAW_SERVICES})
 ENDFOREACH()
 MESSAGE(STATUS "Found ROS-Services: " ${SERVICES})
 
+file(GLOB RAW_ACTIONS action/*.action)
+foreach(action ${RAW_ACTIONS})
+    file(RELATIVE_PATH REL_ACTIONS ${CMAKE_CURRENT_LIST_DIR}/action/ ${action})
+    list(APPEND ACTIONS ${REL_ACTIONS})
+ENDFOREACH()
+MESSAGE(STATUS "Found ROS-Actions: " ${ACTIONS})
+
+
 #find catkin packages
 find_package(catkin REQUIRED
     moveit_ros_planning_interface
@@ -66,7 +74,8 @@ catkin_python_setup()
 #    ${SERVICES}
 #)
 
-add_action_files(DIRECTORY action FILES PickBox.action PlaceBox.action)
+#add all actions
+add_action_files(FILES ${ACTIONS})
 
 #generate messages 
 generate_messages(
@@ -101,7 +110,7 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 )
 
 #SET GLOBAL DEPENDECIES and Links
-set(LINKLIBS)
+set(LINKLIBS kollrobot_helper)
 set(GLOB_LINKLIBS ${catkin_LIBRARIES} ) 
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
@@ -130,8 +139,8 @@ ENDFOREACH()
 SET(NODENAME kollrobot_controller)
 add_executable(${NODENAME} ${SRC_PREFIX}kollrobot_controller.cpp)
 
-add_dependencies(${NODENAME} ${GLOB_DEPENDENCIES})
-target_link_libraries(${NODENAME} ${LINKLIBS} ${GLOB_LINKLIBS})
+add_dependencies(${NODENAME} ${GLOB_DEPENDENCIES} kollrobot_controller_actions)
+target_link_libraries(${NODENAME} ${LINKLIBS} ${GLOB_LINKLIBS} kollrobot_controller_actions)
 
 
 #manage installation e.g. all include files
