@@ -27,7 +27,6 @@ namespace PickBoxAction
 
     private:
         bool CheckBoxAvailability(std::string boxFrameID);
-        void Init() override;
         void PublishFeedback(std::string state, float percent, bool warn);
 
         //methods to calculate positions/trajecotries ect

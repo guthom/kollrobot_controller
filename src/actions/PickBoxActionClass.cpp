@@ -168,13 +168,4 @@ namespace PickBoxAction {
         _server->setSucceeded(_result);
         return;
     }
-
-    void PickBoxActionClass::Init() {
-        _server = new ActionServer(*_node, _actionName, boost::bind(&PickBoxActionClass::ExecuteActionCallback, this,
-                                                                    _1), false);
-
-        _server->start();
-        ROS_INFO_STREAM("Started Action Server for " << _actionName);
-
-    }
 }

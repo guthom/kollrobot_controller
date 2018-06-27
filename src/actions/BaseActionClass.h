@@ -26,7 +26,7 @@ protected:
     ActionFeedback _feedback;
     ActionResult _result;
 
-    virtual void Init() = 0;
+    virtual void Init();
 
 public:
     BaseActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);
@@ -39,4 +39,15 @@ BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal>::BaseAct
         ros::NodeHandle* node, KollrobotMoveGroup* moveGroup) : _node(node), _moveGroup(moveGroup)
 {
     _transformationHandler = new TransformationHandler(_node);
+}
+
+template <typename ActionServer, typename ActionFeedback, typename ActionResult, typename ActionGoal>
+void BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal>::Init() {
+
+    _server = new ActionServer(*_node, _actionName, boost::bind(&BaseActionClass::ExecuteActionCallback, this,
+                                                                _1), false);
+
+    _server->start();
+    ROS_INFO_STREAM("Started Action Server for " << _actionName);
+
 }

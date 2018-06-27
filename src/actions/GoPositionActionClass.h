@@ -24,10 +24,7 @@ namespace GoPositionAction
             public BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal> {
 
     private:
-
         void PublishFeedback(std::string state, float percent, bool warn);
-
-        void Init() override;
 
     public:
         GoPositionActionClass(ros::NodeHandle *node, KollrobotMoveGroup *moveGroup);

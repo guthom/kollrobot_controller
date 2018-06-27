@@ -54,14 +54,4 @@ namespace GoPositionAction {
 
         return;
     }
-
-
-    void GoPositionActionClass::Init() {
-        _server = new ActionServer(*_node, _actionName, boost::bind(&GoPositionActionClass::ExecuteActionCallback, this,
-                                                                    _1), false);
-
-        _server->start();
-        ROS_INFO_STREAM("Started Action Server for " << _actionName);
-
-    }
 }
