@@ -43,7 +43,8 @@ public:
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();
-    void GoHome();
+    bool GoHome();
+    bool GoPosition(std::string positionName);
     void Execute();
 
     moveit::planning_interface::PlanningSceneInterface* _planningSzene;

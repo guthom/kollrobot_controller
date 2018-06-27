@@ -151,7 +151,7 @@ void RunSimMode()
 void RunNormalMode()
 {
     ros::Rate rate(iRefreshRate);
-    armGroup->GoHome();
+    //armGroup->GoHome();
     while(_node->ok())
     {
         ros::spinOnce();

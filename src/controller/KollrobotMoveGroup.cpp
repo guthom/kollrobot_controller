@@ -32,7 +32,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _nodeThread = new boost::thread(boost::bind(&KollrobotMoveGroup::Run,this));
 
 
-    GoHome();
+    //GoHome();
     SetConstraints();
 
     InitMarker();
@@ -244,9 +244,21 @@ void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::PoseStamped targetPose
     RunPlanningExecute();
 }
 
-void KollrobotMoveGroup::GoHome()
+bool KollrobotMoveGroup::GoHome()
 {
-    _moveGroup->setNamedTarget("home");
+    return GoPosition("home");
+}
+
+
+bool KollrobotMoveGroup::GoPosition(std::string positionName)
+{
+    bool poseValid = _moveGroup->setNamedTarget(positionName);
+    if(!poseValid)
+    {
+        ROS_WARN_STREAM("The movegroup does not know the pose: " + positionName + " Add it to the move group config");
+        return false;
+    }
+
     RunPlanningExecute();
 }
 
