@@ -11,6 +11,7 @@
 #include "controller/KollrobotMoveGroup.h"
 #include "actions/PickBoxActionClass.h"
 #include "actions/GoPositionActionClass.h"
+#include "actions/PlaceBoxActionClass.h"
 
 //common stuff
 float iRefreshRate = 0.2;
@@ -32,6 +33,8 @@ KollrobotMoveGroup* armGroup;
 
 PickBoxAction::PickBoxActionClass* pickBoxAction;
 GoPositionAction::GoPositionActionClass* goPositionAction;
+PlaceBoxAction::PlaceBoxActionClass* placeBoxAction;
+
 
 void InitParams()
 {
@@ -50,6 +53,7 @@ void InitActions()
 {
     pickBoxAction = new PickBoxAction::PickBoxActionClass(_node, armGroup);
     goPositionAction = new GoPositionAction::GoPositionActionClass(_node, armGroup);
+    placeBoxAction = new PlaceBoxAction::PlaceBoxActionClass(_node, armGroup);
 }
 
 float RandomFloat(float a, float b) {

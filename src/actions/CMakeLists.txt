@@ -37,7 +37,7 @@ list(APPEND LIBNAMES)
 #add libraries if needed
 SET(LIBNAME ${COMPONENT_NAME} )
 list(APPEND LIBNAMES ${LIBNAME})
-add_library(${LIBNAME} BaseActionClass.cpp PickBoxActionClass.cpp GoPositionActionClass.cpp)
+add_library(${LIBNAME} ${SUB_SOURCE})
 add_dependencies(${LIBNAME} ${GLOB_DEPENDENCIES} ${LOCAL_DEPENDENCIES})
 target_link_libraries(${LIBNAME} ${GLOB_LINKLIBS} ${LOCAL_LINKLIBS}) 
 
