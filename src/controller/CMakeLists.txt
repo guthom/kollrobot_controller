@@ -29,7 +29,7 @@ set(HEADERS
 )
 #Add Local Dependencies
 set(LOCAL_DEPENDENCIES)
-set(LOCAL_LINKLIBS kollrobot_helper)
+set(LOCAL_LINKLIBS kollrobot_controller_helper)
 
 #Create Libname list
 list(APPEND LIBNAMES)

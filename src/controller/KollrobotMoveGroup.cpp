@@ -17,9 +17,10 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 
     //init MoveIT Stuff
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
+    _moveGroup->setStartStateToCurrentState();
     //TODO: Velocity Hack! Add Parameter for this
-    _moveGroup->setMaxVelocityScalingFactor(double(0.2));
-    _moveGroup->setMaxAccelerationScalingFactor(double(0.2));
+    _moveGroup->setMaxVelocityScalingFactor(double(0.05));
+    _moveGroup->setMaxAccelerationScalingFactor(double(0.05));
     ROS_ERROR("Reduced Speed for ROPOSE");
 
     _planningSzene = new moveit::planning_interface::PlanningSceneInterface();

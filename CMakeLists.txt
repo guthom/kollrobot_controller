@@ -110,7 +110,7 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 )
 
 #SET GLOBAL DEPENDECIES and Links
-set(LINKLIBS kollrobot_helper)
+set(LINKLIBS)
 set(GLOB_LINKLIBS ${catkin_LIBRARIES} ) 
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
