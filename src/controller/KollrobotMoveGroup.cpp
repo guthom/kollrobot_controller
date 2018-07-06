@@ -19,11 +19,14 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
     _moveGroup->setStartStateToCurrentState();
     //TODO: Velocity Hack! Add Parameter for this
-    _moveGroup->setMaxVelocityScalingFactor(double(0.05));
-    _moveGroup->setMaxAccelerationScalingFactor(double(0.05));
+    _moveGroup->setMaxVelocityScalingFactor(double(0.01));
+    _moveGroup->setMaxAccelerationScalingFactor(double(0.01));
+    _moveGroup->setPlanningTime(0.1);
+
     ROS_ERROR("Reduced Speed for ROPOSE");
 
-    _planningSzene = new moveit::planning_interface::PlanningSceneInterface();
+    _planningSceneInterface = new moveit::planning_interface::PlanningSceneInterface();
+    _planningScene = new planning_scene::PlanningScene(_moveGroup->getRobotModel());
 
     //init publisher
     _pubTargetPose = _node->advertise<visualization_msgs::Marker>(_node->getNamespace() + "/TargetPose", 100);
@@ -76,7 +79,30 @@ void KollrobotMoveGroup::SetConstraints()
 
     _constraints.orientation_constraints.push_back(ocm);
 
-    _moveGroup->setPathConstraints(_constraints);
+
+    //_moveGroup->setPathConstraints(_constraints);
+
+    //creat hacked scene for save planning
+    moveit_msgs::CollisionObject co;
+    co.id = "FakedGroundPlane";
+    co.operation = co.ADD;
+    shape_msgs::SolidPrimitive primitive;
+    primitive.type = primitive.BOX;
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0] = 10.0;
+    primitive.dimensions[1] = 10.0;
+    primitive.dimensions[2] = 0.05;
+    geometry_msgs::Pose box_pose;
+    box_pose.orientation.w = 1.0;
+    box_pose.position.x =  0.0;
+    box_pose.position.y = 0.0;
+    box_pose.position.z =  -0.025;
+
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
+    ROS_INFO("Added faked groundplane for ROPOSE!");
+    _planningSceneInterface->applyCollisionObject(co);
 
 }
 
@@ -282,7 +308,33 @@ void KollrobotMoveGroup::MoveToValidRandom()
 
 void KollrobotMoveGroup::MoveToValidRandomRun()
 {
-    _moveGroup->setRandomTarget();
+
+    collision_detection::CollisionRequest collision_request;
+    collision_request.group_name = _groupName;
+    collision_detection::CollisionResult collision_result;
+    robot_state::RobotState currentState = _planningScene->getCurrentState();
+    do
+    {
+        currentState = _planningScene->getCurrentState();
+        do
+        {
+            collision_result.clear();
+            currentState.setToRandomPositions();
+            _planningScene->checkSelfCollision(collision_request, collision_result, currentState);
+            ROS_INFO_STREAM("Collision Check for self Collision pose = " << collision_result.collision);
+
+        }while (collision_result.collision);
+
+        collision_result.clear();
+        _planningScene->checkCollision(collision_request, collision_result, currentState);
+        ROS_INFO_STREAM("Collision Check for random pose = " << collision_result.collision);
+    }
+    while (collision_result.collision);
+
+    _moveGroup->setJointValueTarget(currentState);
+
+    //_moveGroup->setRandomTarget();
+
     IsExecuting = true;
     _moveGroup->move();
     IsExecuting = false;

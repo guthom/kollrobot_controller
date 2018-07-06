@@ -14,7 +14,7 @@
 #include "actions/PlaceBoxActionClass.h"
 
 //common stuff
-float iRefreshRate = 0.2;
+float iRefreshRate = 30;
 std::string nodeName = "kollrobot_controller";
 
 //ros sutff
@@ -40,11 +40,11 @@ void InitParams()
 {
     std::string subNamespace = "";
     //Standard params
-    paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 0.8f);
+    paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 1.0f);
     paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
     paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
-    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", false);
-    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", true);
+    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", true);
+    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
     std::string defaultValue = "manipulator";
     paramGroupName = parameterHandler->AddParameter("GroupName", "", defaultValue);
 }

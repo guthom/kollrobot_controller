@@ -11,8 +11,10 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <moveit/planning_interface/planning_interface.h>
+#include <moveit/planning_scene/planning_scene.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include "../helper/TransformationHandler.h"
 #include <visualization_msgs/MarkerArray.h>
 
@@ -47,7 +49,8 @@ public:
     bool GoPosition(std::string positionName);
     void Execute();
 
-    moveit::planning_interface::PlanningSceneInterface* _planningSzene;
+    moveit::planning_interface::PlanningSceneInterface* _planningSceneInterface;
+    planning_scene::PlanningScene* _planningScene;
 private:
     //node stuff
     ros::NodeHandle* _node;
