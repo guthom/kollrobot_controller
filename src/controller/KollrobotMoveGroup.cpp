@@ -19,11 +19,9 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
     _moveGroup->setStartStateToCurrentState();
     //TODO: Velocity Hack! Add Parameter for this
-    _moveGroup->setMaxVelocityScalingFactor(double(0.5));
-    _moveGroup->setMaxAccelerationScalingFactor(double(0.5));
-    _moveGroup->setPlanningTime(0.1);
-
-    ROS_ERROR("Reduced Speed for ROPOSE");
+    _moveGroup->setMaxVelocityScalingFactor(double(_paramMaxVelocityScale.GetValue()));
+    _moveGroup->setMaxAccelerationScalingFactor(double(_paramMaxAccelerationScale.GetValue()));
+    _moveGroup->setPlanningTime(_paramPlanningTime.GetValue());
 
     _planningSceneInterface = new moveit::planning_interface::PlanningSceneInterface();
     _planningScene = new planning_scene::PlanningScene(_moveGroup->getRobotModel());
@@ -44,43 +42,47 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 
 void KollrobotMoveGroup::SetConstraints()
 {
-    _constraints.name = "BoxUP";
-
-    //set constraint to keep box
-
-    /*
-    moveit_msgs::JointConstraint jc;
-    jc.joint_name = "wrist_2_joint";
-    jc.position = -1.58;
-    jc.tolerance_above = 0.5;
-    jc.tolerance_below = 0.5;
-
-    constraints.joint_constraints.push_back(jc);
-    */
-    std::vector<std::string> linkNames = _moveGroup->getLinkNames();
-    geometry_msgs::PoseStamped currentPose = _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
-    currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
-    moveit_msgs::OrientationConstraint ocm;
-    ocm.link_name = linkNames[linkNames.size()-2];
-    ocm.header.frame_id = "base_link";
-    ocm.orientation = currentPose.pose.orientation;
-
-    /*
-    ocm.orientation.x = -0.28126;
-    ocm.orientation.y = -0.25993;
-    ocm.orientation.z = -0.65244;
-    ocm.orientation.w = 0.65395;
-    */
-
-    ocm.absolute_x_axis_tolerance = M_PI;
-    ocm.absolute_y_axis_tolerance = M_PI;
-    ocm.absolute_z_axis_tolerance = M_PI; //ignore this axis
-    ocm.weight = 1.0;
-
-    _constraints.orientation_constraints.push_back(ocm);
 
 
-    //_moveGroup->setPathConstraints(_constraints);
+    if(_param_SetConstraints.GetValue())
+
+        _constraints.name = "BoxUP";
+        //set constraint to keep box
+        /*
+        moveit_msgs::JointConstraint jc;
+        jc.joint_name = "wrist_2_joint";
+        jc.position = -1.58;
+        jc.tolerance_above = 0.5;
+        jc.tolerance_below = 0.5;
+        jc.weight = 1.0;
+        _constraints.joint_constraints.push_back(jc);
+        */
+
+        std::vector<std::string> linkNames = _moveGroup->getLinkNames();
+        geometry_msgs::PoseStamped currentPose = _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
+        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
+        //_transformationHandler->SendStaticTransform(currentPose, "TestPOse");
+        moveit_msgs::OrientationConstraint ocm;
+
+        ocm.link_name = "ee_link";
+        ocm.header.frame_id = "base_link";
+        ocm.header.stamp = ros::Time::now();
+        ocm.orientation = currentPose.pose.orientation;
+
+        ocm.orientation.x = 0.0;
+        ocm.orientation.y = 0.0;
+        ocm.orientation.z = 0.0;
+        ocm.orientation.w = 1.0;
+
+        ocm.absolute_x_axis_tolerance =  2*M_PI;
+        ocm.absolute_y_axis_tolerance =  2*M_PI;
+        ocm.absolute_z_axis_tolerance =  2*M_PI; //ignore this axis
+
+        ocm.weight = 0.9;
+        _constraints.orientation_constraints.push_back(ocm);
+
+        _moveGroup->setPathConstraints(_constraints);
+
 
     //creat hacked scene for save planning
     moveit_msgs::CollisionObject co;
@@ -110,6 +112,10 @@ void KollrobotMoveGroup::InitParameter()
 {
     std::string subNamespace = _nodeName + "/";
     _param_RefreshRate = _parameterHandler->AddParameter("RefreshRate", subNamespace, "", int(20));
+    _param_SetConstraints = _parameterHandler->AddParameter("SetConstraints", subNamespace, "", true);
+    _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 0.1f);
+    _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 0.1f);
+    _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 3.0f);
 }
 
 void KollrobotMoveGroup::InitMarker()

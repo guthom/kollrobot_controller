@@ -88,7 +88,10 @@ private:
     moveit::planning_interface::MoveGroupInterface::Plan _currentExecutedPlan;
 
     //parameter stuff
-    void InitRosParams();
     customparameter::ParameterHandler* _parameterHandler;
     customparameter::Parameter<int> _param_RefreshRate;
+    customparameter::Parameter<bool> _param_SetConstraints;
+    customparameter::Parameter<float> _paramMaxVelocityScale;
+    customparameter::Parameter<float> _paramMaxAccelerationScale;
+    customparameter::Parameter<float> _paramPlanningTime;
 };
