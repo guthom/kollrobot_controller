@@ -44,8 +44,7 @@ void KollrobotMoveGroup::SetConstraints()
 {
 
 
-    if(_param_SetConstraints.GetValue())
-
+    if(_param_SetConstraints.GetValue()) {
         _constraints.name = "BoxUP";
         //set constraint to keep box
         /*
@@ -58,7 +57,7 @@ void KollrobotMoveGroup::SetConstraints()
         _constraints.joint_constraints.push_back(jc);
         */
 
-        std::vector<std::string> linkNames = _moveGroup->getLinkNames();
+        std::vector <std::string> linkNames = _moveGroup->getLinkNames();
         geometry_msgs::PoseStamped currentPose = _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
         currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
         //_transformationHandler->SendStaticTransform(currentPose, "TestPOse");
@@ -74,15 +73,15 @@ void KollrobotMoveGroup::SetConstraints()
         ocm.orientation.z = 0.0;
         ocm.orientation.w = 1.0;
 
-        ocm.absolute_x_axis_tolerance =  2*M_PI;
-        ocm.absolute_y_axis_tolerance =  2*M_PI;
-        ocm.absolute_z_axis_tolerance =  2*M_PI; //ignore this axis
+        ocm.absolute_x_axis_tolerance = 2 * M_PI;
+        ocm.absolute_y_axis_tolerance = 2 * M_PI;
+        ocm.absolute_z_axis_tolerance = 2 * M_PI; //ignore this axis
 
         ocm.weight = 0.9;
         _constraints.orientation_constraints.push_back(ocm);
 
         _moveGroup->setPathConstraints(_constraints);
-
+    }
 
     //creat hacked scene for save planning
     moveit_msgs::CollisionObject co;
