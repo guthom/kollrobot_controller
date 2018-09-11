@@ -43,8 +43,8 @@ void InitParams()
     paramMaxWorkspace = parameterHandler->AddParameter("MaxWorkspace", "", 1.0f);
     paramSimMode = parameterHandler->AddParameter("SimMode", "", false);
     paramDemoMode = parameterHandler->AddParameter("DemoMode", "", false);
-    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", true);
-    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", false);
+    paramDemoUR10Mode = parameterHandler->AddParameter("DemoUR10Mode", "", false);
+    paramNormalMode = parameterHandler->AddParameter("NormalMode", "", true);
     std::string defaultValue = "manipulator";
     paramGroupName = parameterHandler->AddParameter("GroupName", "", defaultValue);
 }

@@ -5,19 +5,19 @@
     <!-- more default parameters can be changed here -->
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
+    <arg name="gui" value="false"/>
     <arg name="headless" value="false"/>
     <arg name="debug" value="false"/>
   </include>
   
   <!-- load params-->
-  <arg name="ur_limited" default="true"/>
+  <arg name="limited" default="true"/>
   <arg name="robot_name" default="ur10"/>
   <arg name="robot_description" default="$(arg robot_name)/robot_description"/>
 
   <!-- send robot urdf to param server -->
-  <include file="$(find ur_description)/launch/ur10_upload.launch">
-    <arg name="limited" value="$(arg ur_limited)"/>
+   <include file="$(find kollrobot_description)/launch/upload.launch">
+    <arg name="limited" value="$(arg limited)"/>
   </include>
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
@@ -40,9 +40,4 @@
     <arg name="simulateQRCode" value="true"/>
   </include>
   
-  <!--node pkg="tf" type="static_transform_publisher" name="camera_link_tf" args="X Y Z qx qy qz qw /world /camera_link 1"/-->
-  <!--node pkg="tf2_ros" type="static_transform_publisher" name="base_link_tf" args="0 -3 1 -0.0705648, -0.070621, 0.703294, 0.7038543 /world /base_camera_link"/-->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_tf" args="0 -3 1 0 0 0 /world /base_camera_link"/>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf" args="0 0 0 0 0 -1.77 /base_camera_link /camera_link"/>
-
-</launch>
+  </launch>

@@ -83,24 +83,58 @@ void KollrobotMoveGroup::SetConstraints()
         _moveGroup->setPathConstraints(_constraints);
     }
 
-    //creat hacked scene for save planning
+    //creat hacked scene for save planning with kollrobot
     moveit_msgs::CollisionObject co;
-    co.id = "FakedGroundPlane";
+    co.id = "kollrobotApprox";
     co.operation = co.ADD;
     shape_msgs::SolidPrimitive primitive;
+
+    //add first primitive box
     primitive.type = primitive.BOX;
-    primitive.dimensions.resize(3);
-    primitive.dimensions[0] = 10.0;
-    primitive.dimensions[1] = 10.0;
-    primitive.dimensions[2] = 0.05;
     geometry_msgs::Pose box_pose;
+
+    float securityRange = _paramSecurityRange.GetValue();
+
+    float robOffset[3] = {-0.235f, 0.0f, 0.0f};
+    float bigBox[3] = {0.65f + securityRange, 0.56f + securityRange, 0.90f};
+    float smallBox[3] = {0.25f + securityRange/4, 0.56f + securityRange, 0.08f};
+    float handle[3] = {0.04f + securityRange/4, 0.20f + securityRange, 0.06f};
+
+
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0] = bigBox[0];
+    primitive.dimensions[1] = bigBox[1];
+    primitive.dimensions[2] = bigBox[2];
     box_pose.orientation.w = 1.0;
-    box_pose.position.x =  0.0;
-    box_pose.position.y = 0.0;
-    box_pose.position.z =  -0.025;
+    box_pose.position.x = robOffset[0];
+    box_pose.position.y = robOffset[1];
+    box_pose.position.z = robOffset[2] - bigBox[2]/2;
 
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
+
+    //add second primitive box
+    primitive.dimensions[0] = smallBox[0];
+    primitive.dimensions[1] = smallBox[1];
+    primitive.dimensions[2] = smallBox[2];
+    box_pose.orientation.w = 1.0;
+    box_pose.position.x = -(bigBox[0]/2 - smallBox[0]/2 - securityRange/2 - robOffset[0]) ;
+    box_pose.position.y = robOffset[1];
+    box_pose.position.z = robOffset[2] + smallBox[2]/2;
+
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
+    //add handle primitive box
+    primitive.dimensions[0] = handle[0];
+    primitive.dimensions[1] = handle[1];
+    primitive.dimensions[2] = handle[2];
+    box_pose.orientation.w = 1.0;
+    box_pose.position.z += smallBox[2]/2 + handle[2]/2;
+
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
 
     ROS_INFO("Added faked groundplane for ROPOSE!");
     _planningSceneInterface->applyCollisionObject(co);
@@ -115,6 +149,7 @@ void KollrobotMoveGroup::InitParameter()
     _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 0.1f);
     _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 0.1f);
     _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 3.0f);
+    _paramSecurityRange = _parameterHandler->AddParameter("SecurityRange", subNamespace, "", 0.06f);
 }
 
 void KollrobotMoveGroup::InitMarker()

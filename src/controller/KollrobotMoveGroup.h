@@ -94,4 +94,5 @@ private:
     customparameter::Parameter<float> _paramMaxVelocityScale;
     customparameter::Parameter<float> _paramMaxAccelerationScale;
     customparameter::Parameter<float> _paramPlanningTime;
+    customparameter::Parameter<float> _paramSecurityRange;
 };
