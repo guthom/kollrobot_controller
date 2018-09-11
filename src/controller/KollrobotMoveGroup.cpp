@@ -149,7 +149,7 @@ void KollrobotMoveGroup::InitParameter()
     _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 0.1f);
     _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 0.1f);
     _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 3.0f);
-    _paramSecurityRange = _parameterHandler->AddParameter("SecurityRange", subNamespace, "", 0.06f);
+    _paramSecurityRange = _parameterHandler->AddParameter("SecurityRange", subNamespace, "", 0.02f);
 }
 
 void KollrobotMoveGroup::InitMarker()
