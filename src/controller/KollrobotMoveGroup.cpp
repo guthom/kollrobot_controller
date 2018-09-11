@@ -97,8 +97,8 @@ void KollrobotMoveGroup::SetConstraints()
 
     float robOffset[3] = {-0.235f, 0.0f, 0.0f};
     float bigBox[3] = {0.65f + securityRange, 0.56f + securityRange, 0.90f};
-    float smallBox[3] = {0.25f + securityRange/4, 0.56f + securityRange, 0.08f};
-    float handle[3] = {0.04f + securityRange/4, 0.20f + securityRange, 0.06f};
+    float smallBox[3] = {0.25f + securityRange/4, 0.56f + securityRange, 0.095f};
+    float handle[3] = {0.03f + securityRange/4, 0.175f + securityRange, 0.045f};
 
 
     primitive.dimensions.resize(3);
@@ -130,6 +130,7 @@ void KollrobotMoveGroup::SetConstraints()
     primitive.dimensions[1] = handle[1];
     primitive.dimensions[2] = handle[2];
     box_pose.orientation.w = 1.0;
+    box_pose.position.x += 0.025;
     box_pose.position.z += smallBox[2]/2 + handle[2]/2;
 
     co.primitives.push_back(primitive);
