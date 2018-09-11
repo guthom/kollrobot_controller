@@ -4,3 +4,4 @@ MG_manipulator:
   MaxAccelerationScale: 0.1
   MaxVelocityScale: 0.1
   PlanningTime: 3
+  SecurityRange: 0.02
