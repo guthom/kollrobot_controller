@@ -29,6 +29,10 @@ namespace PickBoxAction
         bool CheckBoxAvailability(std::string boxFrameID);
         void PublishFeedback(std::string state, float percent, bool warn);
 
+        geometry_msgs::Pose pickOrientation;
+        void Init();
+
+
         //methods to calculate positions/trajecotries ect
         geometry_msgs::PoseStamped CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose);
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string targetFrame);

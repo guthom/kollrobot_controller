@@ -8,7 +8,16 @@ namespace PickBoxAction {
     PickBoxActionClass::PickBoxActionClass(ros::NodeHandle *node, KollrobotMoveGroup *moveGroup) :
             BaseActionClass(node, moveGroup) {
         _actionName = "PickBoxAction";
+        BaseActionClass::Init();
         Init();
+    }
+
+    void PickBoxActionClass::Init() {
+        pickOrientation.orientation.x = -0.5;
+        pickOrientation.orientation.y = 0.5;
+        pickOrientation.orientation.z = 0.5;
+        pickOrientation.orientation.w = 0.5;
+
     }
 
     void PickBoxActionClass::PublishFeedback(std::string state, float percent, bool warn = false) {
@@ -30,11 +39,8 @@ namespace PickBoxAction {
         prePickPose.pose.position.z += 0.3;
         prePickPose.pose.position.x -= 0.05;
         //force quaternion
-        //TODO: Find a better way to to this
-        prePickPose.pose.orientation.x = 0.0;
-        prePickPose.pose.orientation.y = 0.707;
-        prePickPose.pose.orientation.z = 0.0;
-        prePickPose.pose.orientation.w = 0.707;
+        //TODO: Find a better way to do this
+        prePickPose.pose.orientation = pickOrientation.orientation;
 
         return prePickPose;
     }
@@ -45,11 +51,8 @@ namespace PickBoxAction {
         prePickPose.pose.position.z += 0.3;
         prePickPose.pose.position.x -= 0.05;
         //force quaternion
-        //TODO: Find a better way to to this
-        prePickPose.pose.orientation.x = 0.0;
-        prePickPose.pose.orientation.y = 0.707;
-        prePickPose.pose.orientation.z = 0.0;
-        prePickPose.pose.orientation.w = 0.707;
+        //TODO: Find a better way to do this
+        prePickPose.pose.orientation = pickOrientation.orientation;
 
         return prePickPose;
     }

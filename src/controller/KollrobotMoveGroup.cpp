@@ -18,7 +18,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     //init MoveIT Stuff
     _moveGroup = new moveit::planning_interface::MoveGroupInterface(_groupName);
     _moveGroup->setStartStateToCurrentState();
-    //TODO: Velocity Hack! Add Parameter for this
+
     _moveGroup->setMaxVelocityScalingFactor(double(_paramMaxVelocityScale.GetValue()));
     _moveGroup->setMaxAccelerationScalingFactor(double(_paramMaxAccelerationScale.GetValue()));
     _moveGroup->setPlanningTime(_paramPlanningTime.GetValue());
@@ -63,21 +63,22 @@ void KollrobotMoveGroup::SetConstraints()
         //_transformationHandler->SendStaticTransform(currentPose, "TestPOse");
         moveit_msgs::OrientationConstraint ocm;
 
-        ocm.link_name = "ee_link";
+        ocm.link_name = "wrist_3_link";
         ocm.header.frame_id = "base_link";
         ocm.header.stamp = ros::Time::now();
         ocm.orientation = currentPose.pose.orientation;
 
-        ocm.orientation.x = 0.0;
-        ocm.orientation.y = 0.0;
-        ocm.orientation.z = 0.0;
-        ocm.orientation.w = 1.0;
 
-        ocm.absolute_x_axis_tolerance = 2 * M_PI;
-        ocm.absolute_y_axis_tolerance = 2 * M_PI;
-        ocm.absolute_z_axis_tolerance = 2 * M_PI; //ignore this axis
+        ocm.orientation = currentPose.pose.orientation;
+        //ocm.orientation.y = 0.0;
+        //ocm.orientation.z = 0.0;
+        //ocm.orientation.w = 1.0;
 
-        ocm.weight = 0.9;
+        ocm.absolute_x_axis_tolerance = M_PI;
+        ocm.absolute_y_axis_tolerance = M_PI;
+        ocm.absolute_z_axis_tolerance = M_PI; //ignore this axis
+
+        ocm.weight = 1.0;
         _constraints.orientation_constraints.push_back(ocm);
 
         _moveGroup->setPathConstraints(_constraints);
@@ -147,9 +148,9 @@ void KollrobotMoveGroup::InitParameter()
     std::string subNamespace = _nodeName + "/";
     _param_RefreshRate = _parameterHandler->AddParameter("RefreshRate", subNamespace, "", int(20));
     _param_SetConstraints = _parameterHandler->AddParameter("SetConstraints", subNamespace, "", true);
-    _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 0.1f);
-    _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 0.1f);
-    _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 3.0f);
+    _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 1.0f);
+    _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 1.0f);
+    _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 5.0f);
     _paramSecurityRange = _parameterHandler->AddParameter("SecurityRange", subNamespace, "", 0.02f);
 }
 
