@@ -36,9 +36,20 @@ namespace GoPositionAction {
 
         std::string position = goal.get()->position;
 
-        PublishFeedback("Plan to known position: " + position, 10.0);
 
-        bool success = _moveGroup->GoPosition(goal.get()->position);
+        bool success = false;
+        if(position == "random")
+        {
+            PublishFeedback("Plan to random valid position", 10.0);
+            _moveGroup->MoveToValidRandom();
+            success = true;
+        }
+        else
+        {
+            PublishFeedback("Plan to known position: " + position, 10.0);
+            success = _moveGroup->GoPosition(goal.get()->position);
+        }
+
 
         if(!success)
         {
