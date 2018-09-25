@@ -42,6 +42,8 @@ public:
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
+
+    geometry_msgs::PoseStamped GetEndEffectorPose();
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();

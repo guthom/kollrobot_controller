@@ -40,6 +40,11 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     InitMarker();
 }
 
+geometry_msgs::PoseStamped KollrobotMoveGroup::GetEndEffectorPose()
+{
+    return _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
+}
+
 void KollrobotMoveGroup::SetConstraints()
 {
 
@@ -138,7 +143,7 @@ void KollrobotMoveGroup::SetConstraints()
     co.primitive_poses.push_back(box_pose);
 
 
-    ROS_INFO("Added faked groundplane for ROPOSE!");
+    //ROS_INFO("Added approx kollrobot for planning!!");
     _planningSceneInterface->applyCollisionObject(co);
 
 }
@@ -364,6 +369,11 @@ void KollrobotMoveGroup::MoveToValidRandomRun()
             currentState.setToRandomPositions();
             _planningScene->checkSelfCollision(collision_request, collision_result, currentState);
             ROS_INFO_STREAM("Collision Check for self Collision pose = " << collision_result.collision);
+            if (collision_result.collision == false)
+            {
+                _planningScene->checkCollision(collision_request, collision_result, currentState);
+                ROS_INFO_STREAM("Collision Check for collision pose = " << collision_result.collision);
+            }
 
         }while (collision_result.collision);
 

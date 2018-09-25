@@ -13,11 +13,6 @@ namespace PickBoxAction {
     }
 
     void PickBoxActionClass::Init() {
-        pickOrientation.orientation.x = -0.5;
-        pickOrientation.orientation.y = 0.5;
-        pickOrientation.orientation.z = 0.5;
-        pickOrientation.orientation.w = 0.5;
-
     }
 
     void PickBoxActionClass::PublishFeedback(std::string state, float percent, bool warn = false) {
@@ -33,13 +28,24 @@ namespace PickBoxAction {
         _server->publishFeedback(_feedback);
     }
 
+    void PickBoxActionClass::SetPickOrientation(std::string targetFrame)
+    {
+        //TODO: Find a better way to do this
+        geometry_msgs::PoseStamped tempPose = _moveGroup->GetEndEffectorPose();
+        tempPose.header.frame_id = "world";
+        tempPose = _transformationHandler->TransformPose(tempPose, targetFrame);
+        pickOrientation.orientation = tempPose.pose.orientation;
+    }
 
     geometry_msgs::PoseStamped PickBoxActionClass::CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose) {
+
+        SetPickOrientation(targetPose.header.frame_id);
+
         geometry_msgs::PoseStamped prePickPose(targetPose);
-        prePickPose.pose.position.z += 0.3;
+        prePickPose.pose.position.z -= 0.3;
         prePickPose.pose.position.x -= 0.05;
+
         //force quaternion
-        //TODO: Find a better way to do this
         prePickPose.pose.orientation = pickOrientation.orientation;
 
         return prePickPose;
@@ -48,10 +54,11 @@ namespace PickBoxAction {
     geometry_msgs::PoseStamped PickBoxActionClass::CalculatePrePickPosition(std::string targetFrame) {
         geometry_msgs::PoseStamped prePickPose;
         prePickPose.header.frame_id = targetFrame;
-        prePickPose.pose.position.z += 0.3;
+        prePickPose.pose.position.z -= 0.3;
         prePickPose.pose.position.x -= 0.05;
         //force quaternion
         //TODO: Find a better way to do this
+        _transformationHandler->GetTransform("wrist_3_link" , targetFrame);
         prePickPose.pose.orientation = pickOrientation.orientation;
 
         return prePickPose;
@@ -79,7 +86,7 @@ namespace PickBoxAction {
 
         geometry_msgs::Pose pose4 = prePickPose.pose;
         pose4.position.x = 0.1;
-        pose4.position.z = 0.3;
+        pose4.position.z = -0.3;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
         moveit_msgs::RobotTrajectory trajecotry = _moveGroup->ComputeCartesianpath(waypoints);
@@ -112,7 +119,7 @@ namespace PickBoxAction {
 
         geometry_msgs::PoseStamped pose4 = targetPose;
         pose4.pose.position.x = 0.1;
-        pose4.pose.position.z = 0.3;
+        pose4.pose.position.z = -0.3;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
         return waypoints;
