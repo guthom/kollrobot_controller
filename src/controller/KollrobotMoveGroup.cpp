@@ -265,15 +265,16 @@ visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(
     return markerArray;
 }
 
-moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints)
+moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints,
+                                                                      std::string frameID="base_link")
 {
     visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(waypoints);
     _pubWaypoints.publish(waypointMarker);
 
     moveit_msgs::RobotTrajectory trajectory;
-    trajectory.joint_trajectory.header.frame_id = "simulatedQR";
+    trajectory.joint_trajectory.header.frame_id = frameID;
 
-    _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory, _moveGroup->getPathConstraints());
+    double variation = _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory, _moveGroup->getPathConstraints());
 
     return trajectory;
 }

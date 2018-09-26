@@ -44,7 +44,10 @@ namespace PickBoxAction
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID,
                                                             geometry_msgs::PoseStamped targetPose);
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string targetFrame);
-        moveit_msgs::RobotTrajectory CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose);
+
+        moveit_msgs::RobotTrajectory CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose,
+                                                             geometry_msgs::TransformStamped transform);
+
         std::vector<geometry_msgs::PoseStamped> CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
 

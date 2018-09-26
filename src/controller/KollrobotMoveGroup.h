@@ -38,7 +38,8 @@ public:
     void PlanToPoseExecute(geometry_msgs::PoseStamped targetPose);
     void PlanToPositionExecute(geometry_msgs::PointStamped targetPose);
     void PlanToPositionExecute(geometry_msgs::Point targetPose);
-    moveit_msgs::RobotTrajectory ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints);
+    moveit_msgs::RobotTrajectory ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints,
+                                                      std::string frameID);
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 

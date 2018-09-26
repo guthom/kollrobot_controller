@@ -53,8 +53,8 @@ namespace PickBoxAction {
         moveit_msgs::Constraints constraints;
         constraints.name = "BoxUP";
         std::vector <std::string> linkNames = _moveGroup->_moveGroup->getLinkNames();
-        geometry_msgs::PoseStamped currentPose = _moveGroup->_moveGroup->getCurrentPose(
-                _moveGroup->_moveGroup->getEndEffectorLink());
+        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
+
         currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
 
         moveit_msgs::OrientationConstraint ocm;
@@ -64,17 +64,13 @@ namespace PickBoxAction {
         ocm.header.stamp = ros::Time::now();
         ocm.orientation = currentPose.pose.orientation;
 
-
-        ocm.orientation = currentPose.pose.orientation;
-
         ocm.absolute_x_axis_tolerance = M_PI;
         ocm.absolute_y_axis_tolerance = M_PI;
-        ocm.absolute_z_axis_tolerance = M_PI; //ignore this axis
-
+        ocm.absolute_z_axis_tolerance = 0.5*M_PI; //ignore this axis
         ocm.weight = 1.0;
         constraints.orientation_constraints.push_back(ocm);
 
-        //_moveGroup->SetConstraints(constraints);
+        _moveGroup->SetConstraints(constraints);
 
     }
 
@@ -112,32 +108,38 @@ namespace PickBoxAction {
         return prePickPose;
     }
 
-    moveit_msgs::RobotTrajectory PickBoxActionClass::CalculatePickTrajectory(geometry_msgs::PoseStamped prePickPose) {
-        auto transform = _transformationHandler->GetTransform( "base_link", prePickPose.header.frame_id);
+    moveit_msgs::RobotTrajectory PickBoxActionClass::CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose,
+                                                                             geometry_msgs::TransformStamped transform)
+    {
+
+        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
+        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
 
         std::vector<geometry_msgs::Pose> waypoints;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, prePickPose.pose));
+        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose.pose));
 
-        geometry_msgs::Pose pose1 = prePickPose.pose;
+        geometry_msgs::Pose pose1 = targetPose.pose;
         pose1.position.z = 0.0;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
-        geometry_msgs::Pose pose2 = prePickPose.pose;
+        geometry_msgs::Pose pose2 = targetPose.pose;
         pose2.position.x = 0.0;
         pose2.position.z = 0.0;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
-        geometry_msgs::Pose pose3 = prePickPose.pose;
+        geometry_msgs::Pose pose3 = targetPose.pose;
         pose3.position.x = 0.1;
         pose3.position.z = 0.0;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
-        geometry_msgs::Pose pose4 = prePickPose.pose;
+        geometry_msgs::Pose pose4 = targetPose.pose;
         pose4.position.x = 0.1;
         pose4.position.z = -0.3;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
-        moveit_msgs::RobotTrajectory trajecotry = _moveGroup->ComputeCartesianpath(waypoints);
+        waypoints.push_back(currentPose.pose);
+
+        moveit_msgs::RobotTrajectory trajecotry = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
 
         return trajecotry;
     }
@@ -147,8 +149,6 @@ namespace PickBoxAction {
     PickBoxActionClass::CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                 geometry_msgs::TransformStamped transform)
     {
-        SetConstraints();
-
         std::vector<geometry_msgs::PoseStamped> waypoints;
         waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose));
 
@@ -203,6 +203,7 @@ namespace PickBoxAction {
 
         geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->box_frameID,
                                                                                             "base_link");
+
         if(!CheckRange(boxTransform.transform.translation))
         {
             PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
@@ -212,19 +213,19 @@ namespace PickBoxAction {
             return;
         }
 
+        SetConstraints();
         PublishFeedback("Moving to pre pick position", 0.0);
         auto prePickPose = CalculatePrePickPosition(newGoal->box_frameID, newGoal->box_pose);
-        _moveGroup->PlanToPoseExecute(prePickPose);
+        //_moveGroup->PlanToPoseExecute(prePickPose);
         PublishFeedback("Moved to to pre pick position", 10.0);
 
         PublishFeedback("Calculating Gripping Trajectory", 20.0);
         auto poseSeries = CalculatePickPoseSeries(prePickPose, boxTransform);
-        //auto trajectory = CalculatePickTrajectory(prePickPose);
-
+        auto trajectory = CalculatePickTrajectory(prePickPose, boxTransform);
 
         PublishFeedback("Execute Gripping Trajectory", 40.0);
-        _moveGroup->ExecutePoseSeries(poseSeries);
-        //_moveGroup->ExecuteTrajectory(trajectory);
+        //_moveGroup->ExecutePoseSeries(poseSeries);
+        _moveGroup->ExecuteTrajectory(trajectory);
 
         //PublishFeedback("Moving back to pre pick position", 80.0);
         //_moveGroup->PlanToPoseExecute(prePickPose);
