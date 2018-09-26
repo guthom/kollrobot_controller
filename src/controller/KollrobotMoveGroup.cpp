@@ -35,7 +35,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
 
 
     //GoHome();
-    SetConstraints();
+    SetPlanningScene();
 
     InitMarker();
 }
@@ -45,50 +45,21 @@ geometry_msgs::PoseStamped KollrobotMoveGroup::GetEndEffectorPose()
     return _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
 }
 
-void KollrobotMoveGroup::SetConstraints()
+void KollrobotMoveGroup::SetConstraints(moveit_msgs::Constraints constraints)
 {
+    ROS_INFO_STREAM("Set constraints for path planning!");
+    _moveGroup->setPathConstraints(constraints);
+}
 
+void KollrobotMoveGroup::ClearConstraints()
+{
+    ROS_INFO_STREAM("Cleared all constraints for path planning!");
+    _moveGroup->clearPathConstraints();
 
-    if(_param_SetConstraints.GetValue()) {
-        _constraints.name = "BoxUP";
-        //set constraint to keep box
-        /*
-        moveit_msgs::JointConstraint jc;
-        jc.joint_name = "wrist_2_joint";
-        jc.position = -1.58;
-        jc.tolerance_above = 0.5;
-        jc.tolerance_below = 0.5;
-        jc.weight = 1.0;
-        _constraints.joint_constraints.push_back(jc);
-        */
+}
 
-        std::vector <std::string> linkNames = _moveGroup->getLinkNames();
-        geometry_msgs::PoseStamped currentPose = _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
-        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
-        //_transformationHandler->SendStaticTransform(currentPose, "TestPOse");
-        moveit_msgs::OrientationConstraint ocm;
-
-        ocm.link_name = "wrist_3_link";
-        ocm.header.frame_id = "base_link";
-        ocm.header.stamp = ros::Time::now();
-        ocm.orientation = currentPose.pose.orientation;
-
-
-        ocm.orientation = currentPose.pose.orientation;
-        //ocm.orientation.y = 0.0;
-        //ocm.orientation.z = 0.0;
-        //ocm.orientation.w = 1.0;
-
-        ocm.absolute_x_axis_tolerance = M_PI;
-        ocm.absolute_y_axis_tolerance = M_PI;
-        ocm.absolute_z_axis_tolerance = M_PI; //ignore this axis
-
-        ocm.weight = 1.0;
-        _constraints.orientation_constraints.push_back(ocm);
-
-        _moveGroup->setPathConstraints(_constraints);
-    }
-
+void KollrobotMoveGroup::SetPlanningScene()
+{
     //creat hacked scene for save planning with kollrobot
     moveit_msgs::CollisionObject co;
     co.id = "kollrobotApprox";
@@ -145,14 +116,12 @@ void KollrobotMoveGroup::SetConstraints()
 
     //ROS_INFO("Added approx kollrobot for planning!!");
     _planningSceneInterface->applyCollisionObject(co);
-
 }
 
 void KollrobotMoveGroup::InitParameter()
 {
     std::string subNamespace = _nodeName + "/";
     _param_RefreshRate = _parameterHandler->AddParameter("RefreshRate", subNamespace, "", int(20));
-    _param_SetConstraints = _parameterHandler->AddParameter("SetConstraints", subNamespace, "", true);
     _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 1.0f);
     _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 1.0f);
     _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 5.0f);

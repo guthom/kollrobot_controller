@@ -29,6 +29,7 @@ namespace PlaceBoxAction
         std::vector<geometry_msgs::PoseStamped> CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose);
         geometry_msgs::PoseStamped CalculatePrePlacePosition(geometry_msgs::PoseStamped targetPose);
 
+
     public:
         PlaceBoxActionClass(ros::NodeHandle *node, KollrobotMoveGroup *moveGroup);
 

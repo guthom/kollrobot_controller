@@ -42,6 +42,7 @@ public:
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
+    void SetPlanningScene();
 
     geometry_msgs::PoseStamped GetEndEffectorPose();
     void PlanSimulationPath();
@@ -51,8 +52,17 @@ public:
     bool GoPosition(std::string positionName);
     void Execute();
 
+
+    //moveIt Stuff
+    moveit::planning_interface::MoveGroupInterface* _moveGroup;
+    moveit::planning_interface::MoveGroupInterface::Plan _currentPlan;
+    moveit::planning_interface::MoveGroupInterface::Plan _currentExecutedPlan;
+    void ClearConstraints();
+    void SetConstraints(moveit_msgs::Constraints);
+
     moveit::planning_interface::PlanningSceneInterface* _planningSceneInterface;
     planning_scene::PlanningScene* _planningScene;
+
 private:
     //node stuff
     ros::NodeHandle* _node;
@@ -60,12 +70,13 @@ private:
     void Run();
     boost::thread* _nodeThread;
 
+    std::string _groupName;
+
     TransformationHandler* _transformationHandler;
 
-    std::string _groupName;
     void Init(ros::NodeHandle* parentNode);
-    moveit_msgs::Constraints _constraints;
-    void SetConstraints();
+
+
     void InitParameter();
 
     void RunPlanning();
@@ -84,15 +95,10 @@ private:
     visualization_msgs::Marker _markerTargetPose;
 
 
-    //moveIt Stuff
-    moveit::planning_interface::MoveGroupInterface* _moveGroup;
-    moveit::planning_interface::MoveGroupInterface::Plan _currentPlan;
-    moveit::planning_interface::MoveGroupInterface::Plan _currentExecutedPlan;
 
     //parameter stuff
     customparameter::ParameterHandler* _parameterHandler;
     customparameter::Parameter<int> _param_RefreshRate;
-    customparameter::Parameter<bool> _param_SetConstraints;
     customparameter::Parameter<float> _paramMaxVelocityScale;
     customparameter::Parameter<float> _paramMaxAccelerationScale;
     customparameter::Parameter<float> _paramPlanningTime;

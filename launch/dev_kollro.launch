@@ -61,7 +61,7 @@
     <param name="DemoMode" type="bool" value="false" />
     <param name="DemoUR10Mode" type="bool" value="false" />
     <param name="NormalMode" type="bool" value="true" />
-    <param name="MG_manipulator/SetConstraints" type="bool" value="true" />
+    <param name="MG_manipulator/SetPlanningScene" type="bool" value="true" />
   </node>
 
   <arg name="rviz_cfg" default="$(find ropose)/rvizConfig/demo_ur10_only.rviz" />
