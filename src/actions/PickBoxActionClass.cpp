@@ -17,6 +17,23 @@ namespace PickBoxAction {
         SetPickOrientation();
     }
 
+    void PickBoxActionClass::InitParameter()
+    {
+        paramMaxRange = _parameterHandler->AddParameter("MaxRange", "" ,1.2f);
+    }
+
+    bool PickBoxActionClass::CheckRange(geometry_msgs::Vector3 position)
+    {
+        bool ret = false;
+
+        float distance =(float)sqrt(pow(position.x, 2.0) + pow(position.y, 2.0) + pow(position.z, 2.0));
+        ROS_INFO_STREAM("Objects distance to robot is: " + std::to_string(distance) + " meter");
+        if (distance <= paramMaxRange.GetValue())
+            ret = true;
+
+        return ret;
+    }
+
     void PickBoxActionClass::PublishFeedback(std::string state, float percent, bool warn = false) {
         if (!warn) {
             ROS_INFO_STREAM(state);
@@ -186,6 +203,15 @@ namespace PickBoxAction {
 
         geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->box_frameID,
                                                                                             "base_link");
+        if(!CheckRange(boxTransform.transform.translation))
+        {
+            PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
+
+            _server->setSucceeded(_result);
+
+            return;
+        }
+
         PublishFeedback("Moving to pre pick position", 0.0);
         auto prePickPose = CalculatePrePickPosition(newGoal->box_frameID, newGoal->box_pose);
         _moveGroup->PlanToPoseExecute(prePickPose);

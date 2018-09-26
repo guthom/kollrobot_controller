@@ -9,6 +9,7 @@
 #include "../helper/TransformationHandler.h"
 #include <kollrobot_controller/PickBoxAction.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <vector>
 
@@ -31,7 +32,11 @@ namespace PickBoxAction
 
         geometry_msgs::Pose pickOrientation;
         void Init();
+        void InitParameter();
 
+        bool CheckRange(geometry_msgs::Vector3 position);
+
+        customparameter::Parameter<float> paramMaxRange;
 
         //methods to calculate positions/trajecotries ect
         void SetPickOrientation();
