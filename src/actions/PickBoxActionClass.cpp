@@ -13,6 +13,8 @@ namespace PickBoxAction {
     }
 
     void PickBoxActionClass::Init() {
+
+        SetPickOrientation();
     }
 
     void PickBoxActionClass::PublishFeedback(std::string state, float percent, bool warn = false) {
@@ -40,7 +42,7 @@ namespace PickBoxAction {
 
         moveit_msgs::OrientationConstraint ocm;
 
-        ocm.link_name = "wrist_3_link";
+        ocm.link_name = "ee_link";
         ocm.header.frame_id = "base_link";
         ocm.header.stamp = ros::Time::now();
         ocm.orientation = currentPose.pose.orientation;
@@ -59,21 +61,20 @@ namespace PickBoxAction {
 
     }
 
-    void PickBoxActionClass::SetPickOrientation(std::string targetFrame)
+    void PickBoxActionClass::SetPickOrientation()
     {
         //TODO: Find a better way to do this
-        geometry_msgs::PoseStamped tempPose = _moveGroup->GetEndEffectorPose();
-        tempPose.header.frame_id = "base_link";
-        tempPose = _transformationHandler->TransformPose(tempPose, targetFrame);
-        pickOrientation.orientation = tempPose.pose.orientation;
+        pickOrientation.orientation.x = 0.707;
+        pickOrientation.orientation.y = 0.0;
+        pickOrientation.orientation.z = 0.707;
+        pickOrientation.orientation.w = 0.0;
     }
 
     geometry_msgs::PoseStamped PickBoxActionClass::CalculatePrePickPosition(std::string frameID,
                                                                             geometry_msgs::PoseStamped targetPose)
     {
-        SetPickOrientation(frameID);
-
         geometry_msgs::PoseStamped prePickPose(targetPose);
+        prePickPose.header.frame_id = frameID;
         prePickPose.pose.position.z -= 0.3;
         prePickPose.pose.position.x -= 0.05;
         //force quaternion
@@ -84,8 +85,6 @@ namespace PickBoxAction {
 
     geometry_msgs::PoseStamped PickBoxActionClass::CalculatePrePickPosition(std::string targetFrame)
     {
-        SetPickOrientation(targetFrame);
-
         geometry_msgs::PoseStamped prePickPose;
         prePickPose.header.frame_id = targetFrame;
         prePickPose.pose.position.z -= 0.3;
@@ -97,7 +96,7 @@ namespace PickBoxAction {
     }
 
     moveit_msgs::RobotTrajectory PickBoxActionClass::CalculatePickTrajectory(geometry_msgs::PoseStamped prePickPose) {
-        auto transform = _transformationHandler->GetTransform(prePickPose.header.frame_id, "base_link");
+        auto transform = _transformationHandler->GetTransform( "base_link", prePickPose.header.frame_id);
 
         std::vector<geometry_msgs::Pose> waypoints;
         waypoints.push_back(_transformationHandler->TransformPose(transform, prePickPose.pose));
@@ -131,6 +130,7 @@ namespace PickBoxAction {
     PickBoxActionClass::CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                 geometry_msgs::TransformStamped transform)
     {
+        SetConstraints();
 
         std::vector<geometry_msgs::PoseStamped> waypoints;
         waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose));
@@ -175,10 +175,9 @@ namespace PickBoxAction {
         }
 
         auto newGoal = goal.get();
-        SetConstraints();
-        if (!CheckBoxAvailability(newGoal->box_pose.header.frame_id)) {
+        if (!CheckBoxAvailability(newGoal->box_frameID)) {
             std::string msg =
-                    "Box Transformation - " + newGoal->box_pose.header.frame_id + " - is not available, can't pick it!";
+                    "Box Transformation - " + newGoal->box_frameID + " - is not available, can't pick it!";
             PublishFeedback(msg, 0.0);
             success = false;
             _server->setSucceeded(_result);
@@ -187,7 +186,6 @@ namespace PickBoxAction {
 
         geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->box_frameID,
                                                                                             "base_link");
-
         PublishFeedback("Moving to pre pick position", 0.0);
         auto prePickPose = CalculatePrePickPosition(newGoal->box_frameID, newGoal->box_pose);
         _moveGroup->PlanToPoseExecute(prePickPose);

@@ -34,7 +34,7 @@ namespace PickBoxAction
 
 
         //methods to calculate positions/trajecotries ect
-        void SetPickOrientation(std::string targetFrame);
+        void SetPickOrientation();
         void SetConstraints();
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID,
                                                             geometry_msgs::PoseStamped targetPose);
