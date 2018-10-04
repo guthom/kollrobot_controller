@@ -273,8 +273,8 @@ moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vecto
 
     moveit_msgs::RobotTrajectory trajectory;
     trajectory.joint_trajectory.header.frame_id = frameID;
-
-    double variation = _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory, _moveGroup->getPathConstraints());
+    double variation = _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory,
+                                                        _moveGroup->getPathConstraints());
 
     return trajectory;
 }
@@ -360,6 +360,25 @@ void KollrobotMoveGroup::MoveToValidRandomRun()
     IsExecuting = true;
     _moveGroup->move();
     IsExecuting = false;
+}
+
+
+void KollrobotMoveGroup::ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory)
+{
+    const double accelerationFactor = _paramMaxAccelerationScale.GetValue();
+    const double velocityFactor =  _paramMaxVelocityScale.GetValue();
+
+    for(int i = 0; i <= trajectory.joint_trajectory.points.size() -1; i++)
+    {
+        auto point = trajectory.joint_trajectory.points[i];
+        point.time_from_start *= 2;
+
+        for(int j = 0; j <= point.accelerations.size() -1; j++)
+        {
+            point.accelerations[j] *= 0.005;
+            point.velocities[j] *= 0.005;
+        }
+    }
 }
 
 bool KollrobotMoveGroup::IsBusy()

@@ -165,28 +165,9 @@ namespace PickBoxAction {
 
         moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
 
-        //ReplanTrajectory(trajectory);
+        _moveGroup->ReplanTrajectory(trajectory);
 
         return trajectory;
-    }
-
-
-    void PickBoxActionClass::ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory)
-    {
-        const double accelerationFactor = 0.01;//(double)_parameterHandler->GetFloatParameter("MaxAccelerationScale").GetValue();
-        const double velocityFactor =  0.01;//(double)_parameterHandler->GetFloatParameter("MaxVelocityScale").GetValue();
-
-        for(int i = 0; i <= trajectory.joint_trajectory.points.size() -1; i++)
-        {
-            auto point = trajectory.joint_trajectory.points[i];
-
-            for(int j = 0; j <= point.accelerations.size() -1; j++)
-            {
-                point.accelerations[j] *= accelerationFactor;
-                point.velocities[j] *= velocityFactor;
-                point.time_from_start *= 0.5;
-            }
-        }
     }
 
     std::vector<geometry_msgs::PoseStamped>

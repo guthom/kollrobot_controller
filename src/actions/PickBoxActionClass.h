@@ -12,8 +12,6 @@
 #include <geometry_msgs/Vector3.h>
 #include <moveit_msgs/RobotTrajectory.h>
 #include <vector>
-
-#include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <actionlib/server/simple_action_server.h>
 
 namespace PickBoxAction
@@ -53,11 +51,6 @@ namespace PickBoxAction
 
         std::vector<geometry_msgs::PoseStamped> CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
-
-        void ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory);
-
-
-        trajectory_processing::IterativeParabolicTimeParameterization trajectoryProcessor;
 
     public:
         PickBoxActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);

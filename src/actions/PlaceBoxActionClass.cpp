@@ -126,7 +126,6 @@ namespace PlaceBoxAction {
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
         geometry_msgs::PoseStamped pose2 = pose1;
-
         pose2.pose.position.x = 0.00;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
@@ -141,9 +140,40 @@ namespace PlaceBoxAction {
         return waypoints;
     }
 
+
+
     moveit_msgs::RobotTrajectory PlaceBoxActionClass::CalculatePlaceTrajectory(geometry_msgs::PoseStamped targetPose,
                                                           geometry_msgs::TransformStamped transform)
     {
+        auto gripperOffset = paramGripperOffset.GetValue();
+
+        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
+        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
+
+        std::vector<geometry_msgs::Pose> waypoints;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose.pose));
+
+        geometry_msgs::Pose pose1 = targetPose.pose;
+        pose1.position.z = -gripperOffset;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
+
+        geometry_msgs::Pose pose2 = pose1;
+        pose2.position.x = 0.00;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
+
+        geometry_msgs::Pose pose3 = pose2;
+        pose3.position.x = -0.05;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
+
+        geometry_msgs::Pose pose4 = pose3;
+        pose4.position.z = -0.2;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
+
+        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
+
+        _moveGroup->ReplanTrajectory(trajectory);
+
+        return trajectory;
 
     }
 
@@ -214,7 +244,7 @@ namespace PlaceBoxAction {
             return;
         }
 
-        //SetConstraints();
+        SetConstraints();
         PublishFeedback("Calculating pre place position", 0.0);
         auto prePickPose = CalculatePrePlacePosition(newGoal->place_frameID, newGoal->place_pose);
         _moveGroup->PlanToPoseExecute(prePickPose);
@@ -226,9 +256,6 @@ namespace PlaceBoxAction {
         PublishFeedback("Execute placing Trajectory", 20.0);
         _moveGroup->ExecutePoseSeries(poseSeries);
         //_moveGroup->ExecuteTrajectory(trajectory);
-
-        //PublishFeedback("Moving back to pre pick position", 80.0);
-        //_moveGroup->PlanToPoseExecute(prePickPose);
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();

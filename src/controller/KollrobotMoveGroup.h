@@ -52,6 +52,7 @@ public:
     bool GoHome();
     bool GoPosition(std::string positionName);
     void Execute();
+    void ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory);
 
 
     //moveIt Stuff
