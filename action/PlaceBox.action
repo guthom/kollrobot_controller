@@ -1,5 +1,6 @@
 # Define the goal
 geometry_msgs/PoseStamped place_pose
+string place_frameID
 ---
 # Define the result
 bool succeed

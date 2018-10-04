@@ -25,8 +25,9 @@ set(SOURCE
 set(HEADERS
    ${HEADERS}
    ${SUB_HEADERS}
-   PARENT_SCOPEhas
+   PARENT_SCOPE
 )
+
 #Add Local Dependencies
 set(LOCAL_DEPENDENCIES)
 set(LOCAL_LINKLIBS kollrobot_controller_controller kollrobot_controller_actions)

@@ -35,8 +35,12 @@
 
  <!-- launch realsense-->
   <arg name="width" default="1280"/>
-  <arg name="height" default="720"/>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf" args="0 0 0 0 0 0 1 /world /camera_link"/>    
+  <arg name="height" default="720"/> 
+  
+  <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/-->    
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 -0.8452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/>    
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /camera_link_temp camera_link"/>    
+    
     <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
         <arg name="camera"            value="depthcam1"/>
         <arg name="serial_no"           value=""/>

@@ -13,6 +13,7 @@
 #include <moveit_msgs/RobotTrajectory.h>
 #include <vector>
 
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
 #include <actionlib/server/simple_action_server.h>
 
 namespace PickBoxAction
@@ -30,16 +31,18 @@ namespace PickBoxAction
         bool CheckBoxAvailability(std::string boxFrameID);
         void PublishFeedback(std::string state, float percent, bool warn);
 
-        geometry_msgs::Pose pickOrientation;
+        geometry_msgs::Pose boxOrientation;
         void Init();
         void InitParameter();
 
         bool CheckRange(geometry_msgs::Vector3 position);
 
         customparameter::Parameter<float> paramMaxRange;
+        customparameter::Parameter<float> paramGripperOffset;
+        customparameter::Parameter<float> paramGripperRotOffset;
 
         //methods to calculate positions/trajecotries ect
-        void SetPickOrientation();
+        void SetBoxOrientation();
         void SetConstraints();
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID,
                                                             geometry_msgs::PoseStamped targetPose);
@@ -50,6 +53,11 @@ namespace PickBoxAction
 
         std::vector<geometry_msgs::PoseStamped> CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
+
+        void ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory);
+
+
+        trajectory_processing::IterativeParabolicTimeParameterization trajectoryProcessor;
 
     public:
         PickBoxActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);

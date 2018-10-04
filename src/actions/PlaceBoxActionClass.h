@@ -21,14 +21,38 @@ namespace PlaceBoxAction
     typedef kollrobot_controller::PlaceBoxResult ActionResult;
 
     class PlaceBoxActionClass :
-            public BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal> {
+            public BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal>
+    {
 
     private:
 
+        bool CheckPlaceAvailability(std::string boxFrameID);
         void PublishFeedback(std::string state, float percent, bool warn);
-        std::vector<geometry_msgs::PoseStamped> CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose);
+
         geometry_msgs::PoseStamped CalculatePrePlacePosition(geometry_msgs::PoseStamped targetPose);
 
+        void InitParameter();
+        void Init();
+        geometry_msgs::Pose placeOrientation;
+
+        //methods to calculate positions/trajecotries ect
+        void SetPlaceOrientation();
+        void SetConstraints();
+
+        geometry_msgs::PoseStamped CalculatePrePlacePosition(std::string frameID,
+                                                            geometry_msgs::PoseStamped targetPose);
+
+        moveit_msgs::RobotTrajectory CalculatePlaceTrajectory(geometry_msgs::PoseStamped targetPose,
+                                                             geometry_msgs::TransformStamped transform);
+
+        std::vector<geometry_msgs::PoseStamped> CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose,
+                                                                        geometry_msgs::TransformStamped transform);
+
+        bool CheckRange(geometry_msgs::Vector3 position);
+
+        customparameter::Parameter<float> paramMaxRange;
+        customparameter::Parameter<float> paramGripperOffset;
+        customparameter::Parameter<float> paramGripperRotOffset;
 
     public:
         PlaceBoxActionClass(ros::NodeHandle *node, KollrobotMoveGroup *moveGroup);
