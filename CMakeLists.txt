@@ -111,7 +111,7 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 
 #SET GLOBAL DEPENDECIES and Links
 set(LINKLIBS)
-set(GLOB_LINKLIBS ${catkin_LIBRARIES} ) 
+set(GLOB_LINKLIBS ${catkin_LIBRARIES} ${PROJECT_NAME}_helper)
 set(SUBLIBS)
 set(GLOB_DEPENDENCIES 
     ${PROJECT_NAME}_generate_messages
