@@ -163,6 +163,13 @@ namespace PickBoxAction {
 
         waypoints.push_back(currentPose.pose);
 
+        /*
+        for(int i = 0; i < waypoints.size(); i++)
+        {
+            waypoints[i] = _transformationHandler->TransformPose(waypoints[i], "robot_base");
+        }
+         */
+
         moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
 
         _moveGroup->ReplanTrajectory(trajectory);
@@ -174,27 +181,43 @@ namespace PickBoxAction {
     PickBoxActionClass::CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                 geometry_msgs::TransformStamped transform)
     {
-
         auto gripperOffset = paramGripperOffset.GetValue();
         std::vector<geometry_msgs::PoseStamped> waypoints;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose));
 
+        //auto tempPose = _transformationHandler->TransformPose(transform, targetPose);
+        //tempPose.header.frame_id = transform.child_frame_id;
+        waypoints.push_back(targetPose);
         geometry_msgs::PoseStamped pose1 = targetPose;
         pose1.pose.position.z = -gripperOffset;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
+        pose1.pose.position.x = -0.01;
+        waypoints.push_back(pose1);
+
+        //tempPose = _transformationHandler->TransformPose(transform, pose1);
+        //tempPose.header.frame_id = transform.child_frame_id;
+        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
         geometry_msgs::PoseStamped pose2 = pose1;
-        pose2.pose.position.x = 0.01;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
+        pose2.pose.position.z -= - 0.01;
+        waypoints.push_back(pose2);
+        //tempPose = _transformationHandler->TransformPose(transform, pose2);
+        //tempPose.header.frame_id = transform.child_frame_id;
+        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
         pose3.pose.position.x = 0.1;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
+        waypoints.push_back(pose3);
+        //tempPose = _transformationHandler->TransformPose(transform, pose3);
+        //tempPose.header.frame_id = transform.child_frame_id;
+        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
-        pose4.pose.position.x = 0.1;
         pose4.pose.position.z = -0.3;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
+        waypoints.push_back(pose4);
+        //tempPose = _transformationHandler->TransformPose(transform, pose4);
+        //tempPose.header.frame_id = transform.child_frame_id;
+        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
+
+
 
         return waypoints;
     }
@@ -226,8 +249,7 @@ namespace PickBoxAction {
             return;
         }
 
-        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->box_frameID,
-                                                                                            "base_link");
+        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform("base_link", newGoal->box_frameID);
 
         if(!CheckRange(boxTransform.transform.translation))
         {

@@ -11,7 +11,7 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     _nodeName = "MG_" + _groupName;
     _node = new ros::NodeHandle(*parentNode, _nodeName);
 
-    _transformationHandler = new TransformationHandler(_node);
+    _transformationHandler = new helper::TransformationHandler(_node);
 
     InitParameter();
 

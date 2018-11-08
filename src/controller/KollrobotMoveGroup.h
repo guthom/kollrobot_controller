@@ -74,7 +74,7 @@ private:
 
     std::string _groupName;
 
-    TransformationHandler* _transformationHandler;
+    helper::TransformationHandler* _transformationHandler;
 
     void Init(ros::NodeHandle* parentNode);
 

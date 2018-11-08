@@ -23,7 +23,7 @@ protected:
     ActionServer* _server;
     std::string _actionName;
     KollrobotMoveGroup* _moveGroup;
-    TransformationHandler* _transformationHandler;
+    helper::TransformationHandler* _transformationHandler;
     customparameter::ParameterHandler *_parameterHandler;
     virtual void InitParameter() {};
 
@@ -43,7 +43,7 @@ template <typename ActionServer, typename ActionFeedback, typename ActionResult,
 BaseActionClass<ActionServer, ActionFeedback, ActionResult, ActionGoal>::BaseActionClass(
         ros::NodeHandle* node, KollrobotMoveGroup* moveGroup) : _node(node), _moveGroup(moveGroup)
 {
-    _transformationHandler = new TransformationHandler(_node);
+    _transformationHandler = new helper::TransformationHandler(_node);
     _parameterHandler = new customparameter::ParameterHandler(node);
 }
 
