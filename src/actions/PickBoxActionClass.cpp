@@ -22,7 +22,7 @@ namespace PickBoxAction {
     {
         paramMaxRange = _parameterHandler->AddParameter("MaxRange", "" , 1.25f);
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "" , 0.068f);
-        paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "" , 48.0f);
+        paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "" , 40.0f);
     }
 
     bool PickBoxActionClass::CheckRange(geometry_msgs::Vector3 position)
@@ -112,7 +112,7 @@ namespace PickBoxAction {
         geometry_msgs::PoseStamped prePickPose(targetPose);
         prePickPose.pose.position = targetPose.pose.position;
         prePickPose.header.frame_id = frameID;
-        prePickPose.pose.position.z -= 0.3;
+        prePickPose.pose.position.z -= 0.15;
         prePickPose.pose.position.x -= 0.005;
         //force quaternion
         prePickPose.pose.orientation = boxOrientation.orientation;
@@ -142,24 +142,24 @@ namespace PickBoxAction {
         currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
 
         std::vector<geometry_msgs::Pose> waypoints;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose.pose));
+        waypoints.push_back(targetPose.pose);
 
         geometry_msgs::Pose pose1 = targetPose.pose;
         pose1.position.z = -gripperOffset;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
+        pose1.position.x = -0.015;
+        waypoints.push_back(pose1);
 
         geometry_msgs::Pose pose2 = pose1;
-        pose2.position.x = 0.05;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
+        //pose2.position.x = 0.05;
+        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::Pose pose3 = pose2;
         pose3.position.x = 0.1;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
+        waypoints.push_back(pose3);
 
         geometry_msgs::Pose pose4 = pose3;
-        pose4.position.x = 0.1;
-        pose4.position.z = -0.3;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
+        pose4.position.z = -0.35;
+        waypoints.push_back(pose4);
 
         waypoints.push_back(currentPose.pose);
 
@@ -170,7 +170,7 @@ namespace PickBoxAction {
         }
          */
 
-        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
+        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, targetPose.header.frame_id);
 
         _moveGroup->ReplanTrajectory(trajectory);
 
@@ -189,7 +189,7 @@ namespace PickBoxAction {
         waypoints.push_back(targetPose);
         geometry_msgs::PoseStamped pose1 = targetPose;
         pose1.pose.position.z = -gripperOffset;
-        pose1.pose.position.x = -0.01;
+        pose1.pose.position.x = -0.015;
         waypoints.push_back(pose1);
 
         //tempPose = _transformationHandler->TransformPose(transform, pose1);
@@ -204,14 +204,14 @@ namespace PickBoxAction {
         //waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
-        pose3.pose.position.x = 0.1;
+        pose3.pose.position.x += 0.08;
         waypoints.push_back(pose3);
         //tempPose = _transformationHandler->TransformPose(transform, pose3);
         //tempPose.header.frame_id = transform.child_frame_id;
         //waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
-        pose4.pose.position.z = -0.3;
+        pose4.pose.position.z -= 0.35;
         waypoints.push_back(pose4);
         //tempPose = _transformationHandler->TransformPose(transform, pose4);
         //tempPose.header.frame_id = transform.child_frame_id;
@@ -231,6 +231,7 @@ namespace PickBoxAction {
         ROS_INFO_STREAM("Startet new " << _actionName);
 
 
+        SetBoxOrientation();
         bool success = true;
         if (_moveGroup->IsBusy()) {
             PublishFeedback("MoveGroup is busy! Can't start action!", 0.0);
@@ -273,7 +274,7 @@ namespace PickBoxAction {
         _moveGroup->ExecutePoseSeries(poseSeries);
         //_moveGroup->ExecuteTrajectory(trajectory);
 
-        //PublishFeedback("Moving back to pre pick position", 80.0);
+        PublishFeedback("Moving back to pre pick position", 80.0);
         //_moveGroup->PlanToPoseExecute(prePickPose);
 
         PublishFeedback("Moving back to home position position", 90.0);
