@@ -1,0 +1,102 @@
+<launch>
+ <!-- launch realsense-->
+  <arg name="width" default="640"/>
+  <arg name="height" default="480"/>     
+  <arg name="fps" default="30"/>     
+
+  <group ns="depthcam1">
+  <arg name="cameraName"            value="depthcam1"/>
+    <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/-->    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 0.010 -0.043 -1.571  /world /$(arg cameraName)_link_temp"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.00 -0.01 0.04 -0.03 0.00 0.06 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>    
+  
+    <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+      <arg name="camera"            value="$(arg cameraName)"/>
+      <arg name="serial_no"           value="817412071148"/>
+      <arg name="manager"             default="realsense2_camera_manager_$(arg cameraName)"/>
+      <arg name="json_file_path"      value="/home/thomas/ROS/RealSensCfg/highDense_435.json"/>
+
+      <arg name="fisheye_width"       value="$(arg width)"/>
+      <arg name="fisheye_height"      value="$(arg height)"/>
+      <arg name="enable_fisheye"      value="true"/>
+
+      <arg name="depth_width"         value="$(arg width)"/>
+      <arg name="depth_height"        value="$(arg height)"/>
+      <arg name="enable_depth"        value="true"/>
+
+      <arg name="infra1_width"        value="$(arg width)"/>
+      <arg name="infra1_height"       value="$(arg height)"/>
+      <arg name="enable_infra1"       value="true"/>
+
+      <arg name="infra2_width"        value="$(arg width)"/>
+      <arg name="infra2_height"       value="$(arg height)"/>
+      <arg name="enable_infra2"       value="true"/>
+
+      <arg name="color_width"         value="$(arg width)"/>
+      <arg name="color_height"        value="$(arg height)"/>
+      <arg name="enable_color"        value="true"/>
+
+      <arg name="fisheye_fps"         value="$(arg fps)"/>
+      <arg name="depth_fps"           value="$(arg fps)"/>
+      <arg name="infra1_fps"          value="$(arg fps)"/>
+      <arg name="infra2_fps"          value="$(arg fps)"/>
+      <arg name="color_fps"           value="$(arg fps)"/>
+    </include>
+
+    <rosparam command="load" file="$(find qrcode_referencer)/config/settings.yaml"/>
+    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer" output="screen">
+      <remap from="/depthcam/color/camera_info" to="/$(arg cameraName)/$(arg cameraName)/color/camera_info"/>
+      <remap from="/depthcam/color/image_raw" to="/$(arg cameraName)/$(arg cameraName)/color/image_raw"/>
+      <remap from="/depthcam/depth_registered/points" to="/$(arg cameraName)/$(arg cameraName)/depth_registered/points"/>
+    </node>
+  </group>
+
+  <group ns="depthcam2">
+    <arg name="cameraName"            value="depthcam2"/>
+    <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/-->    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 0.010 -0.043 -1.571  /world /$(arg cameraName)_link_temp"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.00 -0.01 0.04 -0.03 0.00 0.06 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>    
+  
+    <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+      <arg name="camera"            value="$(arg cameraName)"/>
+      <arg name="serial_no"           value="810512061471"/>
+      <arg name="manager"             default="realsense2_camera_manager_$(arg cameraName)"/>
+      <arg name="json_file_path"      value="/home/thomas/ROS/RealSensCfg/highDense_415.json"/>
+
+      <arg name="fisheye_width"       value="$(arg width)"/>
+      <arg name="fisheye_height"      value="$(arg height)"/>
+      <arg name="enable_fisheye"      value="true"/>
+
+      <arg name="depth_width"         value="$(arg width)"/>
+      <arg name="depth_height"        value="$(arg height)"/>
+      <arg name="enable_depth"        value="true"/>
+
+      <arg name="infra1_width"        value="$(arg width)"/>
+      <arg name="infra1_height"       value="$(arg height)"/>
+      <arg name="enable_infra1"       value="true"/>
+
+      <arg name="infra2_width"        value="$(arg width)"/>
+      <arg name="infra2_height"       value="$(arg height)"/>
+      <arg name="enable_infra2"       value="true"/>
+
+      <arg name="color_width"         value="$(arg width)"/>
+      <arg name="color_height"        value="$(arg height)"/>
+      <arg name="enable_color"        value="true"/>
+
+      <arg name="fisheye_fps"         value="$(arg fps)"/>
+      <arg name="depth_fps"           value="$(arg fps)"/>
+      <arg name="infra1_fps"          value="$(arg fps)"/>
+      <arg name="infra2_fps"          value="$(arg fps)"/>
+      <arg name="color_fps"           value="$(arg fps)"/>
+    </include>
+
+    <rosparam command="load" file="$(find qrcode_referencer)/config/settings.yaml"/>
+    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer" output="screen">
+      <remap from="/depthcam/color/camera_info" to="/$(arg cameraName)/$(arg cameraName)/color/camera_info"/>
+      <remap from="/depthcam/color/image_raw" to="/$(arg cameraName)/$(arg cameraName)/color/image_raw"/>
+      <remap from="/depthcam/depth_registered/points" to="/$(arg cameraName)/$(arg cameraName)/depth_registered/points"/>
+    </node>
+  </group>
+</launch>
