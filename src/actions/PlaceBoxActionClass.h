@@ -30,6 +30,7 @@ namespace PlaceBoxAction
         void PublishFeedback(std::string state, float percent, bool warn);
 
         geometry_msgs::Pose placeOrientation;
+        geometry_msgs::Pose placeOffset;
         void SetPlaceOrientation();
         geometry_msgs::PoseStamped CalculatePrePlacePosition(geometry_msgs::PoseStamped targetPose);
 

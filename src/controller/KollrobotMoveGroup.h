@@ -43,6 +43,8 @@ public:
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
+    bool CheckTrajecotry(moveit_msgs::RobotTrajectory trajectory);
+
     void SetPlanningScene();
 
     geometry_msgs::PoseStamped GetEndEffectorPose();

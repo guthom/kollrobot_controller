@@ -322,6 +322,13 @@ bool KollrobotMoveGroup::GoPosition(std::string positionName)
     RunPlanningExecute();
 }
 
+bool KollrobotMoveGroup::CheckTrajecotry(moveit_msgs::RobotTrajectory trajectory)
+{
+    auto constraints = _moveGroup->getPathConstraints();
+    //return _planningScene->isPathValid(_moveGroup->getCurrentState(), &trajectory, &constraints);
+    return true;
+}
+
 void KollrobotMoveGroup::Run()
 {
     ros::Rate rate(_param_RefreshRate.GetValue());

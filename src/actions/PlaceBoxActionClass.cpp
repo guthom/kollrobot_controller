@@ -56,6 +56,10 @@ namespace PlaceBoxAction {
 
         auto combined = baseQuat * hackedRotation;
 
+        placeOrientation.position.x = 0.060;
+        placeOrientation.position.y = 0.095;
+        placeOrientation.position.z = 0.00;
+
         placeOrientation.orientation.x = combined.x();
         placeOrientation.orientation.y = combined.y();
         placeOrientation.orientation.z = combined.z();
@@ -136,7 +140,7 @@ namespace PlaceBoxAction {
 
         geometry_msgs::PoseStamped pose3 = pose2;
         pose3.pose.position.z -= -0.01;
-        pose3.pose.position.x = 0.0;
+        pose3.pose.position.x = targetPose.pose.position.x;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
@@ -157,20 +161,19 @@ namespace PlaceBoxAction {
         moveit_msgs::Constraints constraints;
         constraints.name = "BoxUP";
         std::vector <std::string> linkNames = _moveGroup->_moveGroup->getLinkNames();
-        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
 
-        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
+        geometry_msgs::TransformStamped currentPose = _transformationHandler->GetTransform("world", "wrist_2_link");
 
         moveit_msgs::OrientationConstraint ocm;
 
-        ocm.link_name = "ee_link";
+        ocm.link_name = "wrist_2_link";
         ocm.header.frame_id = "base_link";
         ocm.header.stamp = ros::Time::now();
-        ocm.orientation = currentPose.pose.orientation;
+        ocm.orientation = currentPose.transform.rotation;
 
-        ocm.absolute_x_axis_tolerance = M_PI;
-        ocm.absolute_y_axis_tolerance = M_PI;
-        ocm.absolute_z_axis_tolerance = 0.5*M_PI; //ignore this axis
+        ocm.absolute_x_axis_tolerance = 2*M_PI;
+        ocm.absolute_y_axis_tolerance = 2*M_PI;
+        ocm.absolute_z_axis_tolerance = 0.2 * M_PI;
         ocm.weight = 1.0;
         constraints.orientation_constraints.push_back(ocm);
 
@@ -223,8 +226,8 @@ namespace PlaceBoxAction {
 
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
-        //_moveGroup->ExecutePoseSeries(poseSeries);
-        _moveGroup->ExecuteTrajectory(trajectory);
+        _moveGroup->ExecutePoseSeries(poseSeries);
+        //_moveGroup->ExecuteTrajectory(trajectory);
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();

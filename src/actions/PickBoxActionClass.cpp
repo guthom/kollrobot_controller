@@ -47,40 +47,33 @@ namespace PickBoxAction {
         _server->publishFeedback(_feedback);
     }
 
-    void PickBoxActionClass::SetConstraints() {
+    void PickBoxActionClass::SetConstraints()
+    {
         //Set constraints to keep box up!
         moveit_msgs::Constraints constraints;
         constraints.name = "BoxUP";
-        std::vector<std::string> linkNames = _moveGroup->_moveGroup->getLinkNames();
-        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
+        std::vector <std::string> linkNames = _moveGroup->_moveGroup->getLinkNames();
 
-        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
+        geometry_msgs::TransformStamped currentPose = _transformationHandler->GetTransform("world", "wrist_2_link");
 
         moveit_msgs::OrientationConstraint ocm;
 
-        ocm.link_name = "ee_link";
+        ocm.link_name = "wrist_2_link";
         ocm.header.frame_id = "base_link";
         ocm.header.stamp = ros::Time::now();
-        ocm.orientation = currentPose.pose.orientation;
+        ocm.orientation = currentPose.transform.rotation;
 
-        ocm.absolute_x_axis_tolerance = M_PI;
-        ocm.absolute_y_axis_tolerance = M_PI;
-        ocm.absolute_z_axis_tolerance = 0.5 * M_PI; //ignore this axis
+        ocm.absolute_x_axis_tolerance = 2*M_PI;
+        ocm.absolute_y_axis_tolerance = 2*M_PI;
+        ocm.absolute_z_axis_tolerance = 0.2 * M_PI;
         ocm.weight = 1.0;
         constraints.orientation_constraints.push_back(ocm);
 
         _moveGroup->SetConstraints(constraints);
     }
 
-    void PickBoxActionClass::SetBoxOrientation() {
-        //TODO: Find a better way to do this
-        /*
-        boxOrientation.orientation.x = 0.707;
-        boxOrientation.orientation.y = 0.0;
-        boxOrientation.orientation.z = 0.707;
-        boxOrientation.orientation.w = 0.0;
-        */
 
+    void PickBoxActionClass::SetBoxOrientation() {
         // hack rotation for gripper
         tf::Quaternion baseQuat, hackedRotation;
         baseQuat.setX(0.707);
@@ -155,12 +148,12 @@ namespace PickBoxAction {
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
         geometry_msgs::PoseStamped pose2 = pose1;
-        pose2.pose.position.z = -gripperOffset;
+        pose2.pose.position.z = -gripperOffset +0.01;
         pose2.pose.position.x -= 0.005;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
-        pose3.pose.position.z -= -0.01;
+       // pose3.pose.position.z -= -0.01;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
@@ -232,10 +225,21 @@ namespace PickBoxAction {
         auto poseSeries = CalculatePickPoseSeries(targetPose, boxTransform);
         auto trajectory = CalculatePickTrajectory(poseSeries);
 
+        if(!_moveGroup->CheckTrajecotry(trajectory))
+        {
+            //cancel action
+            PublishFeedback("Trajectory is not valid! Can't reach target! Cancel action!", 80.0);
+            PublishFeedback("Moving back to home position position", 90.0);
+            _moveGroup->GoHome();
+            _result.succeed = 0;
+            _server->setSucceeded(_result);
+            return;
+        }
+
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
-        //_moveGroup->ExecutePoseSeries(poseSeries);
-        _moveGroup->ExecuteTrajectory(trajectory);
+        _moveGroup->ExecutePoseSeries(poseSeries);
+        //_moveGroup->ExecuteTrajectory(trajectory);
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();
@@ -243,6 +247,5 @@ namespace PickBoxAction {
         PublishFeedback("Finished " + _actionName, 100.0);
         //_result.succeed = success;
         _server->setSucceeded(_result);
-        return;
     }
 }

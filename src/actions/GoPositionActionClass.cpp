@@ -30,8 +30,8 @@ namespace GoPositionAction {
 
         if (_moveGroup->IsBusy())
         {
-            ROS_INFO_STREAM("Can not run action, movegroup is busy!");
-            PublishFeedback("Can't start pick action", 100.0, true);
+            ROS_INFO_STREAM("Move Group is Busy will abort current task");
+
         }
 
         std::string position = goal.get()->position;
