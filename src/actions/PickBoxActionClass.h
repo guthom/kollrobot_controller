@@ -42,15 +42,16 @@ namespace PickBoxAction
         //methods to calculate positions/trajecotries ect
         void SetBoxOrientation();
         void SetConstraints();
-        geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID,
-                                                            geometry_msgs::PoseStamped targetPose);
-        geometry_msgs::PoseStamped CalculatePrePickPosition(std::string targetFrame);
+        geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID, geometry_msgs::PoseStamped targetPose);
+        geometry_msgs::PoseStamped CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose,
+                                                            geometry_msgs::TransformStamped transform);
 
-        moveit_msgs::RobotTrajectory CalculatePickTrajectory(geometry_msgs::PoseStamped targetPose,
-                                                             geometry_msgs::TransformStamped transform);
+        moveit_msgs::RobotTrajectory CalculatePickTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries);
 
         std::vector<geometry_msgs::PoseStamped> CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
+
+        bool ExecutePoseSeries( std::vector<geometry_msgs::PoseStamped> waypoints);
 
     public:
         PickBoxActionClass(ros::NodeHandle* node, KollrobotMoveGroup* moveGroup);

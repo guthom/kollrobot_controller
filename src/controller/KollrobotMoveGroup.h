@@ -65,6 +65,14 @@ public:
     moveit::planning_interface::PlanningSceneInterface* _planningSceneInterface;
     planning_scene::PlanningScene* _planningScene;
 
+
+    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
+                                                         std::string frameID);
+    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::PoseStamped> waypoints);
+
+    bool PublishWaypoints(std::vector<geometry_msgs::PoseStamped> waypoints);
+    bool PublishWaypoints(visualization_msgs::MarkerArray marker);
+
 private:
     //node stuff
     ros::NodeHandle* _node;
@@ -91,9 +99,6 @@ private:
     ros::Publisher _pubTargetPose;
     ros::Publisher _pubWaypoints;
     void InitMarker();
-    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::Pose> waypoints,
-                                                         std::string frameID);
-    visualization_msgs::MarkerArray CreateWaypointMarker(std::vector<geometry_msgs::PoseStamped> waypoints);
     visualization_msgs::Marker _markerTargetPose;
 
 

@@ -29,22 +29,19 @@ namespace PlaceBoxAction
         bool CheckPlaceAvailability(std::string boxFrameID);
         void PublishFeedback(std::string state, float percent, bool warn);
 
+        geometry_msgs::Pose placeOrientation;
+        void SetPlaceOrientation();
         geometry_msgs::PoseStamped CalculatePrePlacePosition(geometry_msgs::PoseStamped targetPose);
 
         void InitParameter();
         void Init();
-        geometry_msgs::Pose placeOrientation;
 
         //methods to calculate positions/trajecotries ect
-        void SetPlaceOrientation();
         void SetConstraints();
 
         geometry_msgs::PoseStamped CalculatePrePlacePosition(std::string frameID,
                                                             geometry_msgs::PoseStamped targetPose);
-
-        moveit_msgs::RobotTrajectory CalculatePlaceTrajectory(geometry_msgs::PoseStamped targetPose,
-                                                             geometry_msgs::TransformStamped transform);
-
+        moveit_msgs::RobotTrajectory CalculatePlaceTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries);
         std::vector<geometry_msgs::PoseStamped> CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
 

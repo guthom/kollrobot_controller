@@ -40,6 +40,28 @@ namespace PlaceBoxAction {
         InitParameter();
     }
 
+    void PlaceBoxActionClass::SetPlaceOrientation() {
+
+        // hack rotation for gripper
+        tf::Quaternion baseQuat, hackedRotation;
+        baseQuat.setX(0.707);
+        baseQuat.setY(0.0);
+        baseQuat.setZ(0.707);
+        baseQuat.setW(0.0);
+
+        //deg to rad
+        double rad = paramGripperRotOffset.GetValue() * M_PI / 180.0f;
+
+        hackedRotation.setEuler(0.0, rad, 0.0);
+
+        auto combined = baseQuat * hackedRotation;
+
+        placeOrientation.orientation.x = combined.x();
+        placeOrientation.orientation.y = combined.y();
+        placeOrientation.orientation.z = combined.z();
+        placeOrientation.orientation.w = combined.w();
+    }
+
     bool PlaceBoxActionClass::CheckRange(geometry_msgs::Vector3 position)
     {
         bool ret = false;
@@ -67,36 +89,6 @@ namespace PlaceBoxAction {
         return targetPose;
     }
 
-    void PlaceBoxActionClass::SetPlaceOrientation()
-    {
-        //TODO: Find a better way to do this
-        /*
-        boxOrientation.orientation.x = 0.707;
-        boxOrientation.orientation.y = 0.0;
-        boxOrientation.orientation.z = 0.707;
-        boxOrientation.orientation.w = 0.0;
-        */
-
-        // hack rotation for gripper
-        tf::Quaternion baseQuat, hackedRotation;
-        baseQuat.setX(0.707);
-        baseQuat.setY(0.0);
-        baseQuat.setZ(0.707);
-        baseQuat.setW(0.0);
-
-        //deg to rad
-        double rad = paramGripperRotOffset.GetValue() * M_PI / 180.0f;
-
-        hackedRotation.setEuler(0.0, rad, 0.0);
-
-        auto combined = baseQuat * hackedRotation;
-
-        placeOrientation.orientation.x = combined.x();
-        placeOrientation.orientation.y = combined.y();
-        placeOrientation.orientation.z = combined.z();
-        placeOrientation.orientation.w = combined.w();
-    }
-
     geometry_msgs::PoseStamped PlaceBoxActionClass::CalculatePrePlacePosition(std::string frameID,
                                                                               geometry_msgs::PoseStamped targetPose)
     {
@@ -112,69 +104,46 @@ namespace PlaceBoxAction {
     }
 
 
+    moveit_msgs::RobotTrajectory
+    PlaceBoxActionClass::CalculatePlaceTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries) {
+        std::vector<geometry_msgs::Pose> waypoints;
+        for (int i = 0; i < poseSeries.size(); i++) {
+            waypoints.push_back(poseSeries[i].pose);
+        }
+
+
+        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints,
+                                                                                   poseSeries[0].header.frame_id);
+        //_moveGroup->ReplanTrajectory(trajectory);
+
+        return trajectory;
+    }
+
     std::vector<geometry_msgs::PoseStamped>
     PlaceBoxActionClass::CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose,
-                                                geometry_msgs::TransformStamped transform)
-    {
-
+                                                geometry_msgs::TransformStamped transform) {
         auto gripperOffset = paramGripperOffset.GetValue();
         std::vector<geometry_msgs::PoseStamped> waypoints;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose));
 
         geometry_msgs::PoseStamped pose1 = targetPose;
-        pose1.pose.position.z = -gripperOffset;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
+        pose1.pose.position.x += 0.11;
+        pose1.pose.position.z -= 0.30;
 
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
         geometry_msgs::PoseStamped pose2 = pose1;
-        pose2.pose.position.x = 0.00;
+        pose2.pose.position.z = -gripperOffset;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
-        pose3.pose.position.x = -0.05;
+        pose3.pose.position.z -= -0.01;
+        pose3.pose.position.x = 0.0;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
-        pose4.pose.position.z = -0.2;
+        pose4.pose.position.z -= 0.30;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
         return waypoints;
-    }
-
-
-
-    moveit_msgs::RobotTrajectory PlaceBoxActionClass::CalculatePlaceTrajectory(geometry_msgs::PoseStamped targetPose,
-                                                          geometry_msgs::TransformStamped transform)
-    {
-        auto gripperOffset = paramGripperOffset.GetValue();
-
-        geometry_msgs::PoseStamped currentPose = _moveGroup->GetEndEffectorPose();
-        currentPose = _transformationHandler->TransformPose(currentPose, "world", "base_link");
-
-        std::vector<geometry_msgs::Pose> waypoints;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, targetPose.pose));
-
-        geometry_msgs::Pose pose1 = targetPose.pose;
-        pose1.position.z = -gripperOffset;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
-
-        geometry_msgs::Pose pose2 = pose1;
-        pose2.position.x = 0.00;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
-
-        geometry_msgs::Pose pose3 = pose2;
-        pose3.position.x = -0.05;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
-
-        geometry_msgs::Pose pose4 = pose3;
-        pose4.position.z = -0.2;
-        waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
-
-        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints, "base_link");
-
-        _moveGroup->ReplanTrajectory(trajectory);
-
-        return trajectory;
-
     }
 
     bool PlaceBoxActionClass::CheckPlaceAvailability(std::string boxFrameID)
@@ -214,6 +183,7 @@ namespace PlaceBoxAction {
         ROS_INFO_STREAM("Startet new " << _actionName);
 
 
+        SetPlaceOrientation();
         bool success = true;
         if (_moveGroup->IsBusy()) {
             PublishFeedback("MoveGroup is busy! Can't start action!", 0.0);
@@ -232,30 +202,29 @@ namespace PlaceBoxAction {
             return;
         }
 
-        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->place_frameID,
-                                                                                            "base_link");
-
-        if(!CheckRange(boxTransform.transform.translation))
-        {
-            PublishFeedback("Place is not reachable within the workspace! - Aborting PickAction!", 100.0);
-
+        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform("base_link",
+                                                                                            newGoal->place_frameID);
+        if (!CheckRange(boxTransform.transform.translation)) {
+            PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
             _server->setSucceeded(_result);
 
             return;
         }
 
+
         SetConstraints();
-        PublishFeedback("Calculating pre place position", 0.0);
-        auto prePickPose = CalculatePrePlacePosition(newGoal->place_frameID, newGoal->place_pose);
-        _moveGroup->PlanToPoseExecute(prePickPose);
 
-        PublishFeedback("Calculating placing Trajectory", 10.0);
-        auto poseSeries = CalculatePlacePoseSeries(prePickPose, boxTransform);
-        //auto trajectory = CalculatePlaceTrajectory(prePickPose, boxTransform);
+        geometry_msgs::PoseStamped targetPose = newGoal->place_pose;
+        targetPose.pose = placeOrientation;
 
-        PublishFeedback("Execute placing Trajectory", 20.0);
-        _moveGroup->ExecutePoseSeries(poseSeries);
-        //_moveGroup->ExecuteTrajectory(trajectory);
+        PublishFeedback("Calculating Gripping Trajectory", 10.0);
+        auto poseSeries = CalculatePlacePoseSeries(targetPose, boxTransform);
+        auto trajectory = CalculatePlaceTrajectory(poseSeries);
+
+        PublishFeedback("Execute Gripping Trajectory", 20.0);
+
+        //_moveGroup->ExecutePoseSeries(poseSeries);
+        _moveGroup->ExecuteTrajectory(trajectory);
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();

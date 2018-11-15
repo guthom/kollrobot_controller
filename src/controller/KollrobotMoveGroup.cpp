@@ -113,6 +113,9 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
 
     //ROS_INFO("Added approx kollrobot for planning!!");
     _planningSceneInterface->applyCollisionObject(co);
@@ -195,6 +198,19 @@ void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajecto
 {
     _currentPlan.trajectory_ = trajectory;
     Execute();
+}
+
+
+bool KollrobotMoveGroup::PublishWaypoints(visualization_msgs::MarkerArray marker)
+{
+    _pubWaypoints.publish(marker);
+    return true;
+}
+
+bool KollrobotMoveGroup::PublishWaypoints(std::vector<geometry_msgs::PoseStamped> waypoints)
+{
+    visualization_msgs::MarkerArray marker = CreateWaypointMarker(waypoints);
+    return PublishWaypoints(marker);
 }
 
 void KollrobotMoveGroup::ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses)
@@ -325,7 +341,6 @@ void KollrobotMoveGroup::MoveToValidRandom()
 
 void KollrobotMoveGroup::MoveToValidRandomRun()
 {
-
     collision_detection::CollisionRequest collision_request;
     collision_request.group_name = _groupName;
     collision_detection::CollisionResult collision_result;
