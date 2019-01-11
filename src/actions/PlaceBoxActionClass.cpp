@@ -107,22 +107,6 @@ namespace PlaceBoxAction {
         return prePickPose;
     }
 
-
-    moveit_msgs::RobotTrajectory
-    PlaceBoxActionClass::CalculatePlaceTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries) {
-        std::vector<geometry_msgs::Pose> waypoints;
-        for (int i = 0; i < poseSeries.size(); i++) {
-            waypoints.push_back(poseSeries[i].pose);
-        }
-
-
-        moveit_msgs::RobotTrajectory trajectory = _moveGroup->ComputeCartesianpath(waypoints,
-                                                                                   poseSeries[0].header.frame_id);
-        //_moveGroup->ReplanTrajectory(trajectory);
-
-        return trajectory;
-    }
-
     std::vector<geometry_msgs::PoseStamped>
     PlaceBoxActionClass::CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose,
                                                 geometry_msgs::TransformStamped transform) {
@@ -222,12 +206,27 @@ namespace PlaceBoxAction {
 
         PublishFeedback("Calculating Gripping Trajectory", 10.0);
         auto poseSeries = CalculatePlacePoseSeries(targetPose, boxTransform);
-        auto trajectory = CalculatePlaceTrajectory(poseSeries);
+
+        //set speeds for the single trajecotry points
+        std::vector<float> speeds{ 1.0, 0.1, 0.1, 0.1, 1.0};
+        auto trajectory = _moveGroup->CalculateTrajectory(poseSeries, speeds);
+
+
+        if(!_moveGroup->CheckTrajecotry(trajectory))
+        {
+            //cancel action
+            PublishFeedback("Trajectory is not valid! Can't reach target! Cancel action!", 80.0);
+            PublishFeedback("Moving back to home position position", 90.0);
+            _moveGroup->GoHome();
+            _result.succeed = 0;
+            _server->setSucceeded(_result);
+            return;
+        }
 
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
-        _moveGroup->ExecutePoseSeries(poseSeries);
-        //_moveGroup->ExecuteTrajectory(trajectory);
+        //_moveGroup->ExecutePoseSeries(poseSeries);
+        _moveGroup->ExecuteTrajectory(_moveGroup->ToTrajectoryMSG(trajectory, "base_link"));
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();

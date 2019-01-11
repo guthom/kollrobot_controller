@@ -42,7 +42,6 @@ namespace PlaceBoxAction
 
         geometry_msgs::PoseStamped CalculatePrePlacePosition(std::string frameID,
                                                             geometry_msgs::PoseStamped targetPose);
-        moveit_msgs::RobotTrajectory CalculatePlaceTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries);
         std::vector<geometry_msgs::PoseStamped> CalculatePlacePoseSeries(geometry_msgs::PoseStamped targetPose,
                                                                         geometry_msgs::TransformStamped transform);
 
