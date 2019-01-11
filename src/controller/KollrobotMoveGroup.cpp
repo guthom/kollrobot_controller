@@ -1,5 +1,16 @@
 #include "KollrobotMoveGroup.h"
 
+#include <moveit/robot_state/conversions.h>
+#include <moveit/kinematic_constraints/utils.h>
+#include <moveit/collision_detection/collision_tools.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <moveit/move_group/capability_names.h>
+#include <moveit/planning_pipeline/planning_pipeline.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+
+
 KollrobotMoveGroup::KollrobotMoveGroup(ros::NodeHandle* parentNode, customparameter::ParameterHandler* parameterHandler, std::string groupName)
     : _parameterHandler(parameterHandler), _groupName(groupName)
 {
@@ -200,6 +211,15 @@ void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajecto
     Execute();
 }
 
+void KollrobotMoveGroup::ExecuteTrajectory(std::vector<moveit_msgs::RobotTrajectory> trajectory)
+{
+    for(int i = 0; i < trajectory.size(); i++)
+    {
+        _currentPlan.trajectory_ = trajectory[i];
+        Execute();
+    }
+}
+
 
 bool KollrobotMoveGroup::PublishWaypoints(visualization_msgs::MarkerArray marker)
 {
@@ -281,19 +301,105 @@ visualization_msgs::MarkerArray KollrobotMoveGroup::CreateWaypointMarker(
     return markerArray;
 }
 
-moveit_msgs::RobotTrajectory KollrobotMoveGroup::ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints,
-                                                                      std::string frameID="base_link")
+std::vector<moveit_msgs::RobotTrajectory>
+KollrobotMoveGroup::ToTrajectoryMSG(std::vector<robot_trajectory::RobotTrajectory> trajectories,
+                                    std::string frameID = "/world")
 {
-    visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(waypoints);
-    _pubWaypoints.publish(waypointMarker);
+    std::vector<moveit_msgs::RobotTrajectory> ret;
 
-    moveit_msgs::RobotTrajectory trajectory;
-    trajectory.joint_trajectory.header.frame_id = frameID;
-    double variation = _moveGroup->computeCartesianPath(waypoints, 0.005, 0.0, trajectory,
-                                                        _moveGroup->getPathConstraints());
+    for(int i = 0; i < trajectories.size(); i++)
+    {
+        moveit_msgs::RobotTrajectory trajectory;
+        trajectories[i].getRobotTrajectoryMsg(trajectory);
 
-    return trajectory;
+        trajectory.joint_trajectory.header.frame_id = frameID;
+        trajectory.multi_dof_joint_trajectory.header.frame_id = frameID;
+        ret.push_back(trajectory);
+    }
+
+    return ret;
 }
+
+std::vector<robot_trajectory::RobotTrajectory>
+KollrobotMoveGroup::CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries, std::vector<float> speeds)
+{
+    visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(poseSeries);
+    _pubWaypoints.publish(waypointMarker);
+    // Based on the the original cartesian_path_service_capability.cpp
+    // But we want no service and better speed-controll
+    // https://github.com/ros-planning/moveit/blob/kinetic-devel/moveit_ros/
+    // move_group/src/default_capabilities/cartesian_path_service_capability.cpp
+
+    //arrange waypoints also for the use in EIGEN
+    std::vector<geometry_msgs::Pose> waypoints;
+    EigenSTL::vector_Affine3d  eigen_waypoints;
+    for (int i = 0; i < poseSeries.size(); i++) {
+        waypoints.push_back(poseSeries[i].pose);
+        Eigen::Affine3d point;
+        tf::poseMsgToEigen(poseSeries[i].pose, point);
+        eigen_waypoints.push_back(point);
+        speeds.push_back(0.1);
+    }
+
+    robot_model::RobotModelConstPtr robotModel = _moveGroup->getRobotModel();
+
+
+    robot_state::RobotState startState = *_moveGroup->getCurrentState();
+
+    const robot_model::JointModelGroup* jmg = startState.getJointModelGroup(_groupName);
+
+    std::string linkName = "ee_link"; //jmg->getLinkModelNames().back();
+
+    double jump_threshold = 0.0;
+    double max_step = 0.005;
+    kinematics::KinematicsQueryOptions options();
+    kinematic_constraints::KinematicConstraintSet kset(robotModel);
+
+    std::vector<robot_trajectory::RobotTrajectory> trajectories;
+    std::vector<robot_state::RobotStatePtr> lastTraj;
+
+    float velocityScale = _paramMaxVelocityScale.GetValue();
+    float accelScale = _paramMaxAccelerationScale.GetValue();
+    trajectory_processing::IterativeParabolicTimeParameterization time_param;
+
+    for(int i = 0; i < eigen_waypoints.size(); i++)
+    {
+        if(i > 0)
+        {
+            startState = *lastTraj[lastTraj.size()-1].get();
+        }
+
+        double fraction = startState.computeCartesianPath(jmg, lastTraj, startState.getLinkModel(linkName), eigen_waypoints[i],
+                                                          true, max_step, jump_threshold);
+        ROS_INFO_STREAM("Calculated Trajectory with a fraction of " + std::to_string(fraction));
+        robot_trajectory::RobotTrajectory rt(robotModel, _groupName);
+        for (std::size_t i = 0; i < lastTraj.size(); ++i)
+            rt.addSuffixWayPoint(lastTraj[i], 0.0);
+
+        //retime trajectory with timing given by the speed vector and the max scalling ros-parameter
+        time_param.computeTimeStamps(rt, speeds[i]*velocityScale, speeds[i]*accelScale);
+
+        trajectories.push_back(rt);
+    }
+
+    return trajectories;
+}
+
+
+std::vector<robot_trajectory::RobotTrajectory>
+KollrobotMoveGroup::CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries, std::vector<float> speeds,
+                                        geometry_msgs::TransformStamped transform)
+{
+
+    for (int i = 0; i < poseSeries.size(); i++)
+    {
+        poseSeries[i].pose = _transformationHandler->TransformPose(transform, poseSeries[i].pose);
+        poseSeries[i].header.frame_id = transform.header.frame_id;
+    }
+
+    return CalculateTrajectory(poseSeries, speeds);
+}
+
 
 void KollrobotMoveGroup::PlanToPoseExecute(geometry_msgs::PoseStamped targetPose)
 {
@@ -322,10 +428,22 @@ bool KollrobotMoveGroup::GoPosition(std::string positionName)
     RunPlanningExecute();
 }
 
-bool KollrobotMoveGroup::CheckTrajecotry(moveit_msgs::RobotTrajectory trajectory)
+bool KollrobotMoveGroup::CheckTrajecotry(std::vector<robot_trajectory::RobotTrajectory> trajectory)
 {
-    auto constraints = _moveGroup->getPathConstraints();
-    //return _planningScene->isPathValid(_moveGroup->getCurrentState(), &trajectory, &constraints);
+    moveit_msgs::Constraints constraints = _moveGroup->getPathConstraints();
+
+    const std::string groupName = _groupName;
+    for(int i = 0; i<trajectory.size(); i++)
+    {
+
+        bool valid = _planningScene->isPathValid(trajectory[0], constraints, groupName);
+
+        if(!valid)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -382,25 +500,6 @@ void KollrobotMoveGroup::MoveToValidRandomRun()
     IsExecuting = true;
     _moveGroup->move();
     IsExecuting = false;
-}
-
-
-void KollrobotMoveGroup::ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory)
-{
-    const double accelerationFactor = _paramMaxAccelerationScale.GetValue();
-    const double velocityFactor =  _paramMaxVelocityScale.GetValue();
-
-    for(int i = 0; i <= trajectory.joint_trajectory.points.size() -1; i++)
-    {
-        auto point = trajectory.joint_trajectory.points[i];
-        point.time_from_start *= 2;
-
-        for(int j = 0; j <= point.accelerations.size() -1; j++)
-        {
-            point.accelerations[j] *= 0.005;
-            point.velocities[j] *= 0.005;
-        }
-    }
 }
 
 bool KollrobotMoveGroup::IsBusy()

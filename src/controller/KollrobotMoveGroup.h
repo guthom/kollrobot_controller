@@ -27,6 +27,7 @@ public:
 
     ~KollrobotMoveGroup();
 
+    std::string _groupName;
     bool IsPlanning = false;
     bool PlanValid = false;
     bool IsExecuting = false;
@@ -38,12 +39,22 @@ public:
     void PlanToPoseExecute(geometry_msgs::PoseStamped targetPose);
     void PlanToPositionExecute(geometry_msgs::PointStamped targetPose);
     void PlanToPositionExecute(geometry_msgs::Point targetPose);
-    moveit_msgs::RobotTrajectory ComputeCartesianpath(std::vector<geometry_msgs::Pose> waypoints,
-                                                      std::string frameID);
+
+    std::vector<robot_trajectory::RobotTrajectory> CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries,
+                                                                  std::vector<float> speeds);
+
+    std::vector<robot_trajectory::RobotTrajectory> CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries,
+                                                                       std::vector<float> speeds,
+                                                                       geometry_msgs::TransformStamped transform);
+
+    std::vector<moveit_msgs::RobotTrajectory> ToTrajectoryMSG(std::vector<robot_trajectory::RobotTrajectory> trajectories,
+                                                                                  std::string frameID);
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
+    void ExecuteTrajectory(std::vector<moveit_msgs::RobotTrajectory>);
+    void ExecuteTrajectory(std::vector<robot_trajectory::RobotTrajectory> traj, std::string frameID);
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
-    bool CheckTrajecotry(moveit_msgs::RobotTrajectory trajectory);
+    bool CheckTrajecotry(std::vector<robot_trajectory::RobotTrajectory> trajectory);
 
     void SetPlanningScene();
 
@@ -54,8 +65,6 @@ public:
     bool GoHome();
     bool GoPosition(std::string positionName);
     void Execute();
-    void ReplanTrajectory(moveit_msgs::RobotTrajectory& trajectory);
-
 
     //moveIt Stuff
     moveit::planning_interface::MoveGroupInterface* _moveGroup;
@@ -82,7 +91,6 @@ private:
     void Run();
     boost::thread* _nodeThread;
 
-    std::string _groupName;
 
     helper::TransformationHandler* _transformationHandler;
 
