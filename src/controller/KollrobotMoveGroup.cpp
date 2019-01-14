@@ -86,8 +86,8 @@ void KollrobotMoveGroup::SetPlanningScene()
     float robOffset[3] = {0.0f, -0.235f, 0.0f};
     float bigBox[3] = {0.56f + securityRange, 0.65f + securityRange, 0.90f};
     float smallBox[3] = {0.56f + securityRange, 0.25f + securityRange/4, 0.095f};
-    float handle[3] = {0.175f + securityRange, 0.03f + securityRange/4, 0.045f};
-
+    float handle[3] = {0.175f + securityRange, 0.1f + securityRange/4, 0.080f};
+    float camera[3] = {0.12f + securityRange, 0.05f + securityRange/4, 0.06f};
 
     primitive.dimensions.resize(3);
     primitive.dimensions[0] = bigBox[0];
@@ -120,12 +120,40 @@ void KollrobotMoveGroup::SetPlanningScene()
     box_pose.orientation.w = 1.0;
     box_pose.position.x += 0.025;
     box_pose.position.z += smallBox[2]/2 + handle[2]/2;
-
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
+    //add cameras to scene
+    float camZ = 0.08f;
+    primitive.dimensions[0] = camera[0];
+    primitive.dimensions[1] = camera[1];
+    primitive.dimensions[2] = camera[2];
+    box_pose.orientation.w = 1.0;
+    box_pose.position.x = 0.0;
+    box_pose.position.y = + 0.09f + camera[1]/2;
+    box_pose.position.z = - camZ;
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
+
+    box_pose.orientation.x = 0.707;
+    box_pose.orientation.y = 0.707;
+    box_pose.orientation.z = 0.0;
+    box_pose.orientation.w = 0.0;
+    box_pose.position.x = 0.275f + camera[1]/2;
+    box_pose.position.y = - 0.12f ;
+    box_pose.position.z = - camZ;
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
+    box_pose.position.x = - 0.275f - camera[1]/2;
+    box_pose.position.y = - 0.12f ;
+    box_pose.position.z = - camZ;
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
+
+
+
 
 
     //ROS_INFO("Added approx kollrobot for planning!!");
