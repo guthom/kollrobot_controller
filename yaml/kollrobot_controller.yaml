@@ -8,3 +8,5 @@ MG_manipulator:
   
 kollrobot_controller:
   GripperRotOffset: 48.0
+  GrippingTilt: 5.0
+

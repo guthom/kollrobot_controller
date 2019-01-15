@@ -43,18 +43,29 @@ public:
     std::vector<robot_trajectory::RobotTrajectory> CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries,
                                                                   std::vector<float> speeds);
 
+    robot_trajectory::RobotTrajectory CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries);
+
     std::vector<robot_trajectory::RobotTrajectory> CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries,
                                                                        std::vector<float> speeds,
                                                                        geometry_msgs::TransformStamped transform);
 
+    robot_trajectory::RobotTrajectory FuseTrajectories(std::vector<robot_trajectory::RobotTrajectory> trajectories);
+
     std::vector<moveit_msgs::RobotTrajectory> ToTrajectoryMSG(std::vector<robot_trajectory::RobotTrajectory> trajectories,
                                                                                   std::string frameID);
+
+    moveit_msgs::RobotTrajectory ToTrajectoryMSG(robot_trajectory::RobotTrajectory trajectories,
+                                                              std::string frameID);
+
     void ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory);
     void ExecuteTrajectory(std::vector<moveit_msgs::RobotTrajectory>);
     void ExecuteTrajectory(std::vector<robot_trajectory::RobotTrajectory> traj, std::string frameID);
+    void ExecuteTrajectory(robot_trajectory::RobotTrajectory traj, std::string frameID);
+
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
 
     bool CheckTrajecotry(std::vector<robot_trajectory::RobotTrajectory> trajectory);
+    bool CheckTrajecotry(robot_trajectory::RobotTrajectory trajectory);
 
     void SetPlanningScene();
 

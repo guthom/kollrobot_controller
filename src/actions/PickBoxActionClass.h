@@ -38,9 +38,11 @@ namespace PickBoxAction
         customparameter::Parameter<float> paramMaxRange;
         customparameter::Parameter<float> paramGripperOffset;
         customparameter::Parameter<float> paramGripperRotOffset;
+        customparameter::Parameter<float> paramGrippingTilt;
 
         //methods to calculate positions/trajecotries ect
         void SetBoxOrientation();
+        geometry_msgs::Pose GetTiltOrientation(geometry_msgs::Pose);
         void SetConstraints();
         geometry_msgs::PoseStamped CalculatePrePickPosition(std::string frameID, geometry_msgs::PoseStamped targetPose);
         geometry_msgs::PoseStamped CalculatePrePickPosition(geometry_msgs::PoseStamped targetPose,

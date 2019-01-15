@@ -21,6 +21,7 @@ namespace PickBoxAction {
         paramMaxRange = _parameterHandler->AddParameter("MaxRange", "", 1.25f);
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "", 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "", 48.0f);
+        paramGrippingTilt = _parameterHandler->AddParameter("GrippingTilt", "", 5.0f);
     }
 
     bool PickBoxActionClass::CheckRange(geometry_msgs::Vector3 position) {
@@ -122,10 +123,32 @@ namespace PickBoxAction {
     }
 
 
+    geometry_msgs::Pose
+    PickBoxActionClass::GetTiltOrientation(geometry_msgs::Pose pose)
+    {
+        double gripperTilt = paramGrippingTilt.GetValue() * M_PI / 180.0f;
+
+        tf::Quaternion baseQuat, tilt;
+        baseQuat.setValue(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+        tilt.setEuler(gripperTilt, 0.0, 0.0);
+
+        auto combined = baseQuat * tilt;
+
+        pose.orientation.x = combined.x();
+        pose.orientation.y = combined.y();
+        pose.orientation.z = combined.z();
+        pose.orientation.w = combined.w();
+
+        return pose;
+    }
+
     std::vector<geometry_msgs::PoseStamped>
     PickBoxActionClass::CalculatePickPoseSeries(geometry_msgs::PoseStamped targetPose,
                                                 geometry_msgs::TransformStamped transform) {
         auto gripperOffset = paramGripperOffset.GetValue();
+
+        targetPose.pose = GetTiltOrientation(targetPose.pose);
+
         std::vector<geometry_msgs::PoseStamped> waypoints;
 
         geometry_msgs::PoseStamped pose1 = targetPose;
@@ -138,9 +161,10 @@ namespace PickBoxAction {
         pose2.pose.position.x -= 0.005;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
-        //geometry_msgs::PoseStamped pose3 = pose2;
-        //pose3.pose.position.z -= -0.01;
-        //waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
+        geometry_msgs::PoseStamped pose3 = pose2;
+        pose3.pose.orientation = boxOrientation.orientation;
+        pose3.pose.position.z -= -0.01;
+        waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose2;
         pose4.pose.position.x += 0.08;
@@ -212,7 +236,7 @@ namespace PickBoxAction {
         auto poseSeries = CalculatePickPoseSeries(targetPose, boxTransform);
 
         //set speeds for the single trajecotry points
-        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.8, 1.0};
+        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.5, 0.8, 1.0};
 
         auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
         //auto trajectory = _moveGroup->FuseTrajectories(trajectories);
