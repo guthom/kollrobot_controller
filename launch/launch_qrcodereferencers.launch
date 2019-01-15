@@ -6,16 +6,19 @@
 
   <group ns="depthcam1">
   <arg name="cameraName"            value="depthcam1"/>
-    <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/-->    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 0.010 -0.043 -1.571  /world /$(arg cameraName)_link_temp"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.00 -0.01 0.04 -0.03 0.00 0.06 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04167592 0.12628078 -0.12417453 -0.449640650558 -0.438165235781 -0.559914792172 0.540675445185 /world /$(arg cameraName)_link_temp"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link"/>    
+  
+    <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="0.05237348 0.12714111 -0.12105925 -0.0147995599341 0.638692785767 0.769087051438 0.0189104665781 /world /$(arg cameraName)_link_temp"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link"/>    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/-->    
   
     <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
       <arg name="camera"            value="$(arg cameraName)"/>
-      <arg name="serial_no"           value="817412071148"/>
+      <arg name="serial_no"           value="810512061471"/>
+      <!--arg name="serial_no"           value="746112061095"/-->
       <arg name="manager"             default="realsense2_camera_manager_$(arg cameraName)"/>
-      <arg name="json_file_path"      value="/home/thomas/ROS/RealSensCfg/highDense_435.json"/>
+      <arg name="json_file_path"      value="/home/thomas/ROS/RealSensCfg/kollro_415.json"/>
 
       <arg name="fisheye_width"       value="$(arg width)"/>
       <arg name="fisheye_height"      value="$(arg height)"/>
@@ -42,6 +45,13 @@
       <arg name="infra1_fps"          value="$(arg fps)"/>
       <arg name="infra2_fps"          value="$(arg fps)"/>
       <arg name="color_fps"           value="$(arg fps)"/>
+      <arg name="gyro_fps"            value="1000"/>
+      <arg name="accel_fps"           value="1000"/>
+      <arg name="enable_imu"          value="false"/>
+
+      <arg name="enable_pointcloud"   value="false"/>
+      <arg name="enable_sync"         value="true"/>
+      <arg name="align_depth"         value="true"/>
     </include>
 
     <rosparam command="load" file="$(find qrcode_referencer)/config/settings.yaml"/>
@@ -52,9 +62,9 @@
     </node>
   </group>
 
-  <group ns="depthcam2">
+  <!--group ns="depthcam2">
     <arg name="cameraName"            value="depthcam2"/>
-    <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/-->    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 -0.692256815409 -0.0110600966582 -0.0191038082984 0.72131353813 /world /camera_link_temp"/>    
     <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="-0.04570664 0.10452091 -0.05946044 0.010 -0.043 -1.571  /world /$(arg cameraName)_link_temp"/>    
     <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
     <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.00 -0.01 0.04 -0.03 0.00 0.06 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>    
@@ -98,5 +108,6 @@
       <remap from="/depthcam/color/image_raw" to="/$(arg cameraName)/$(arg cameraName)/color/image_raw"/>
       <remap from="/depthcam/depth_registered/points" to="/$(arg cameraName)/$(arg cameraName)/depth_registered/points"/>
     </node>
-  </group>
+  </group-->
+
 </launch>
