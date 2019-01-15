@@ -56,8 +56,8 @@ namespace PlaceBoxAction {
 
         auto combined = baseQuat * hackedRotation;
 
-        placeOrientation.position.x = 0.060;
-        placeOrientation.position.y = 0.095;
+        placeOrientation.position.x = 0.00;
+        placeOrientation.position.y = 0.00;
         placeOrientation.position.z = 0.00;
 
         placeOrientation.orientation.x = combined.x();
@@ -114,21 +114,21 @@ namespace PlaceBoxAction {
         std::vector<geometry_msgs::PoseStamped> waypoints;
 
         geometry_msgs::PoseStamped pose1 = targetPose;
-        pose1.pose.position.x += 0.11;
-        pose1.pose.position.z -= 0.30;
+        pose1.pose.position.x += 0.14;
+        pose1.pose.position.z -= 0.36;
 
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
         geometry_msgs::PoseStamped pose2 = pose1;
-        pose2.pose.position.z = -gripperOffset;
+        pose2.pose.position.z = -gripperOffset + 0.04;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
         pose3.pose.position.z -= -0.01;
-        pose3.pose.position.x = targetPose.pose.position.x;
+        pose3.pose.position.x = targetPose.pose.position.x + 0.085;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
-        pose4.pose.position.z -= 0.30;
+        pose4.pose.position.z -= 0.25;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
         return waypoints;
@@ -208,11 +208,11 @@ namespace PlaceBoxAction {
         auto poseSeries = CalculatePlacePoseSeries(targetPose, boxTransform);
 
         //set speeds for the single trajecotry points
-        std::vector<float> speeds{ 1.0, 0.1, 0.1, 0.1, 1.0};
-        auto trajectory = _moveGroup->CalculateTrajectory(poseSeries, speeds);
+        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.8, 1.0};
+        auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
 
 
-        if(!_moveGroup->CheckTrajecotry(trajectory))
+        if(!_moveGroup->CheckTrajecotry(trajectories))
         {
             //cancel action
             PublishFeedback("Trajectory is not valid! Can't reach target! Cancel action!", 80.0);
@@ -226,7 +226,7 @@ namespace PlaceBoxAction {
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
         //_moveGroup->ExecutePoseSeries(poseSeries);
-        _moveGroup->ExecuteTrajectory(_moveGroup->ToTrajectoryMSG(trajectory, "base_link"));
+        _moveGroup->ExecuteTrajectory(trajectories, "base_link");
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();
