@@ -10,6 +10,8 @@
     <arg name="debug" value="false"/>
   </include>
   
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf" args="0 0 0 0 0 0 1 /world /map"/>    
+  
   <!-- load params-->
   <arg name="ur_limited" default="true"/>
   <arg name="robot_name" default="ur10"/>
