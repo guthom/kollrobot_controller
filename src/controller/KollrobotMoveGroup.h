@@ -45,6 +45,8 @@ public:
 
     robot_trajectory::RobotTrajectory CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries);
 
+    robot_trajectory::RobotTrajectory CalculateTrajectory(geometry_msgs::PoseStamped pose, float speed);
+
     std::vector<robot_trajectory::RobotTrajectory> CalculateTrajectory(std::vector<geometry_msgs::PoseStamped> poseSeries,
                                                                        std::vector<float> speeds,
                                                                        geometry_msgs::TransformStamped transform);
@@ -63,6 +65,8 @@ public:
     void ExecuteTrajectory(robot_trajectory::RobotTrajectory traj, std::string frameID);
 
     void ExecutePoseSeries(std::vector<geometry_msgs::PoseStamped> poses);
+    void ExecutePoseSeriesAsTrajectory(std::vector<geometry_msgs::PoseStamped> poses, std::vector<float> speeds,
+                                       std::string frameID);
 
     bool CheckTrajecotry(std::vector<robot_trajectory::RobotTrajectory> trajectory);
     bool CheckTrajecotry(robot_trajectory::RobotTrajectory trajectory);
@@ -70,6 +74,9 @@ public:
     void SetPlanningScene();
 
     geometry_msgs::PoseStamped GetEndEffectorPose();
+
+    std::string GetSaveStartPosition( geometry_msgs::TransformStamped target);
+
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();

@@ -56,6 +56,14 @@ geometry_msgs::PoseStamped KollrobotMoveGroup::GetEndEffectorPose()
     return _moveGroup->getCurrentPose(_moveGroup->getEndEffectorLink());
 }
 
+
+std::string KollrobotMoveGroup::GetSaveStartPosition(geometry_msgs::TransformStamped target)
+{
+
+    return "save_left";
+
+}
+
 void KollrobotMoveGroup::SetConstraints(moveit_msgs::Constraints constraints)
 {
     ROS_INFO_STREAM("Set constraints for path planning!");
@@ -123,12 +131,14 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
-    //add cameras to scene
     float camZ = 0.08f;
     primitive.dimensions[0] = camera[0];
     primitive.dimensions[1] = camera[1];
     primitive.dimensions[2] = camera[2];
-    box_pose.orientation.w = 1.0;
+    box_pose.orientation.x = 0.0;
+    box_pose.orientation.y = 0.707;
+    box_pose.orientation.z = 0.0;
+    box_pose.orientation.w = 0.707;
     box_pose.position.x = 0.0;
     box_pose.position.y = + 0.09f + camera[1]/2;
     box_pose.position.z = - camZ;
@@ -136,8 +146,8 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitive_poses.push_back(box_pose);
 
     box_pose.orientation.x = 0.707;
-    box_pose.orientation.y = 0.707;
-    box_pose.orientation.z = 0.0;
+    box_pose.orientation.y = 0.0;
+    box_pose.orientation.z = 0.707;
     box_pose.orientation.w = 0.0;
     box_pose.position.x = 0.275f + camera[1]/2;
     box_pose.position.y = - 0.12f ;
@@ -150,11 +160,6 @@ void KollrobotMoveGroup::SetPlanningScene()
     box_pose.position.z = - camZ;
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
-
-
-
-
-
 
     //ROS_INFO("Added approx kollrobot for planning!!");
     _planningSceneInterface->applyCollisionObject(co);
@@ -233,6 +238,20 @@ void KollrobotMoveGroup::PlanToPositionExecute(geometry_msgs::Point targetPose)
     RunPlanningExecute();
 }
 
+
+void KollrobotMoveGroup::ExecutePoseSeriesAsTrajectory(std::vector<geometry_msgs::PoseStamped> poses,
+                                                       std::vector<float> speeds, std::string frameID)
+{
+    visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(poses);
+    _pubWaypoints.publish(waypointMarker);
+
+    for(int i = 0; i < poses.size(); i++)
+    {
+        auto traj = CalculateTrajectory(poses[i], speeds[i]);
+        ExecuteTrajectory(traj, frameID);
+    }
+}
+
 void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory)
 {
     _currentPlan.trajectory_ = trajectory;
@@ -289,6 +308,54 @@ void KollrobotMoveGroup::ExecutePoseSeries(std::vector<geometry_msgs::PoseStampe
         Execute();
     }
 
+}
+
+
+robot_trajectory::RobotTrajectory KollrobotMoveGroup::CalculateTrajectory(geometry_msgs::PoseStamped pose,
+                                                                          float speed=1.0)
+{
+
+    //arrange waypoints also for the use in EIGEN
+    std::vector<geometry_msgs::Pose> waypoints;
+    EigenSTL::vector_Affine3d  eigen_waypoints;
+    Eigen::Affine3d point;
+    tf::poseMsgToEigen(pose.pose, point);
+    eigen_waypoints.push_back(point);
+
+    robot_model::RobotModelConstPtr robotModel = _moveGroup->getRobotModel();
+
+
+    robot_state::RobotState startState = *_moveGroup->getCurrentState();
+
+    const robot_model::JointModelGroup* jmg = startState.getJointModelGroup(_groupName);
+
+    std::string linkName = "ee_link"; //jmg->getLinkModelNames().back();
+
+    double jump_threshold = 0.0;
+    double max_step = 0.005;
+    kinematics::KinematicsQueryOptions options();
+    kinematic_constraints::KinematicConstraintSet kset(robotModel);
+
+    std::vector<robot_trajectory::RobotTrajectory> trajectories;
+    std::vector<robot_state::RobotStatePtr> lastTraj;
+
+    float velocityScale = _paramMaxVelocityScale.GetValue();
+    float accelScale = _paramMaxAccelerationScale.GetValue();
+    trajectory_processing::IterativeParabolicTimeParameterization time_param;
+
+
+    double fraction = startState.computeCartesianPath(jmg, lastTraj, startState.getLinkModel(linkName), eigen_waypoints,
+                                                      true, max_step, jump_threshold);
+    ROS_INFO_STREAM("Calculated Trajectory with a fraction of " + std::to_string(fraction));
+    robot_trajectory::RobotTrajectory rt(robotModel, _groupName);
+
+    for (int i = 0; i < lastTraj.size(); ++i)
+        rt.addSuffixWayPoint(lastTraj[i], 0.0);
+
+    //retime trajectory with timing given by the speed vector and the max scalling ros-parameter
+    time_param.computeTimeStamps(rt, velocityScale*speed, accelScale*speed);
+
+    return rt;
 }
 
 
@@ -551,8 +618,6 @@ bool KollrobotMoveGroup::GoPosition(std::string positionName)
 
 bool KollrobotMoveGroup::CheckTrajecotry(std::vector<robot_trajectory::RobotTrajectory> trajectory)
 {
-    moveit_msgs::Constraints constraints = _moveGroup->getPathConstraints();
-
     const std::string groupName = _groupName;
     for(int i = 0; i<trajectory.size(); i++)
     {
@@ -561,7 +626,7 @@ bool KollrobotMoveGroup::CheckTrajecotry(std::vector<robot_trajectory::RobotTraj
 
         if(!valid)
         {
-            return false;
+            return true;
         }
     }
 
@@ -578,6 +643,7 @@ bool KollrobotMoveGroup::CheckTrajecotry(robot_trajectory::RobotTrajectory traje
 
     return valid;
 }
+
 
 
 void KollrobotMoveGroup::Run()
