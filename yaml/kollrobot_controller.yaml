@@ -6,7 +6,6 @@ MG_manipulator:
   PlanningTime: 5
   SecurityRange: 0.02
   
-kollrobot_controller:
-  GripperRotOffset: 48.0
-  GrippingTilt: 5.0
+GripperRotOffset: 48.0
+GrippingTilt: 5.0
 

@@ -28,7 +28,7 @@ namespace PlaceBoxAction {
 
     void PlaceBoxActionClass::InitParameter()
     {
-        paramMaxRange = _parameterHandler->AddParameter("MaxRange", "" , 1.25f);
+        paramMaxRange = _parameterHandler->AddParameter("MaxRange", "" , 1.4f);
 
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "" , 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "" , 48.0f);
@@ -114,17 +114,17 @@ namespace PlaceBoxAction {
         std::vector<geometry_msgs::PoseStamped> waypoints;
 
         geometry_msgs::PoseStamped pose1 = targetPose;
-        pose1.pose.position.x += 0.14;
-        pose1.pose.position.z -= 0.36;
+        pose1.pose.position.x += 0.15;
+        pose1.pose.position.z -= 0.40;
 
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
         geometry_msgs::PoseStamped pose2 = pose1;
-        pose2.pose.position.z = -gripperOffset + 0.04;
+        pose2.pose.position.z = -gripperOffset + 0.045;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
         pose3.pose.position.z -= -0.01;
-        pose3.pose.position.x = targetPose.pose.position.x + 0.085;
+        pose3.pose.position.x = targetPose.pose.position.x + 0.075;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;
@@ -200,12 +200,16 @@ namespace PlaceBoxAction {
 
 
         SetConstraints();
-
+        geometry_msgs::PoseStamped startPose = _moveGroup->GetEndEffectorPose();
+        startPose = _transformationHandler->TransformPose(startPose, newGoal->place_frameID);
         geometry_msgs::PoseStamped targetPose = newGoal->place_pose;
         targetPose.pose = placeOrientation;
 
         PublishFeedback("Calculating Gripping Trajectory", 10.0);
         auto poseSeries = CalculatePlacePoseSeries(targetPose, boxTransform);
+
+        //add home start pose to pose Series
+        poseSeries.push_back(startPose);
 
         //set speeds for the single trajecotry points
         std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.8, 1.0};
@@ -226,7 +230,8 @@ namespace PlaceBoxAction {
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
         //_moveGroup->ExecutePoseSeries(poseSeries);
-        _moveGroup->ExecuteTrajectory(trajectories, "base_link");
+        _moveGroup->ExecutePoseSeriesAsTrajectory(poseSeries, speeds, "base_link");
+        //_moveGroup->ExecuteTrajectory(trajectories, "base_link");
 
         PublishFeedback("Moving back to home position position", 90.0);
         _moveGroup->GoHome();

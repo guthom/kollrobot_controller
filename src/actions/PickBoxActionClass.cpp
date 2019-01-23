@@ -18,7 +18,7 @@ namespace PickBoxAction {
     }
 
     void PickBoxActionClass::InitParameter() {
-        paramMaxRange = _parameterHandler->AddParameter("MaxRange", "", 1.25f);
+        paramMaxRange = _parameterHandler->AddParameter("MaxRange", "", 1.4f);
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "", 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "", 48.0f);
         paramGrippingTilt = _parameterHandler->AddParameter("GrippingTilt", "", 5.0f);
@@ -126,14 +126,20 @@ namespace PickBoxAction {
     geometry_msgs::Pose
     PickBoxActionClass::GetTiltOrientation(geometry_msgs::Pose pose)
     {
-        double gripperTilt = paramGrippingTilt.GetValue() * M_PI / 180.0f;
 
-        tf::Quaternion baseQuat, tilt;
+        double gripperTilt = paramGrippingTilt.GetValue() * M_PI / 180.0f;
+        double gripperRot = paramGripperRotOffset.GetValue() * M_PI / 180.0f;
+
+        tf::Quaternion baseQuat, tilt, rot;
         baseQuat.setValue(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
         tilt.setEuler(gripperTilt, 0.0, 0.0);
+        rot.setEuler(0.0, -gripperRot, 0.0);
 
-        auto combined = baseQuat * tilt;
+        auto combined =  baseQuat * rot;
+        combined *= tilt;
+        combined *= rot.inverse();
 
+        combined.normalize();
         pose.orientation.x = combined.x();
         pose.orientation.y = combined.y();
         pose.orientation.z = combined.z();
@@ -153,7 +159,7 @@ namespace PickBoxAction {
 
         geometry_msgs::PoseStamped pose1 = targetPose;
         pose1.pose.position.z -= 0.15;
-        pose1.pose.position.x = -0.015;
+        pose1.pose.position.x = -0.013;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
         geometry_msgs::PoseStamped pose2 = pose1;
@@ -162,16 +168,16 @@ namespace PickBoxAction {
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;
-        pose3.pose.orientation = boxOrientation.orientation;
         pose3.pose.position.z -= -0.01;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
-        geometry_msgs::PoseStamped pose4 = pose2;
-        pose4.pose.position.x += 0.08;
+        geometry_msgs::PoseStamped pose4 = pose3;
+        pose4.pose.orientation = boxOrientation.orientation;
+        pose4.pose.position.x += 0.07;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose4));
 
         geometry_msgs::PoseStamped pose5 = pose4;
-        pose5.pose.position.z -= 0.36;
+        pose5.pose.position.z -= 0.45;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose5));
 
 
@@ -197,6 +203,7 @@ namespace PickBoxAction {
         ROS_INFO_STREAM("Startet new " << _actionName);
 
 
+        //_moveGroup->GoHome();
         SetBoxOrientation();
         bool success = true;
         if (_moveGroup->IsBusy()) {
@@ -219,6 +226,9 @@ namespace PickBoxAction {
         geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform("base_link",
                                                                                             newGoal->box_frameID);
 
+        std::string savePose = _moveGroup->GetSaveStartPosition(boxTransform);
+        _moveGroup->GoPosition(savePose);
+
         if (!CheckRange(boxTransform.transform.translation)) {
             PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
             _server->setSucceeded(_result);
@@ -238,10 +248,18 @@ namespace PickBoxAction {
         //set speeds for the single trajecotry points
         std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.5, 0.8, 1.0};
 
-        auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
-        //auto trajectory = _moveGroup->FuseTrajectories(trajectories);
+        bool check = false;
+        for (int i = 0; i < 5; i++)
+        {
+            auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
+            //auto trajectory = _moveGroup->FuseTrajectories(trajectories);
+            check = _moveGroup->CheckTrajecotry(trajectories);
 
-        if(!_moveGroup->CheckTrajecotry(trajectories))
+            if(check)
+                break;
+        }
+
+        if(!check)
         {
             //cancel action
             PublishFeedback("Trajectory is not valid! Can't reach target! Cancel action!", 80.0);
@@ -255,9 +273,11 @@ namespace PickBoxAction {
         PublishFeedback("Execute Gripping Trajectory", 20.0);
 
         //_moveGroup->ExecutePoseSeries(poseSeries);
-        _moveGroup->ExecuteTrajectory(trajectories, "base_link");
+        _moveGroup->ExecutePoseSeriesAsTrajectory(poseSeries, speeds, "base_link");
 
         PublishFeedback("Moving back to home position position", 90.0);
+
+        _moveGroup->GoPosition(savePose);
         _moveGroup->GoHome();
         _moveGroup->ClearConstraints();
         PublishFeedback("Finished " + _actionName, 100.0);
