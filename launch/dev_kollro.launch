@@ -36,7 +36,7 @@
   </include>
   
   <!-- launch realsense-->
-  <include file="$(find kollrobot_controller)/launch/launch_qrcodereferencers.launch">
+  <include file="$(find kollrobot_controller)/launch/launch_qrcodereferencer.launch">
   </include>
 
   <include file="$(find magic_box)/launch/magic_box_master.launch">

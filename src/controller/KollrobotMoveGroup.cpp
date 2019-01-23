@@ -1,5 +1,5 @@
 #include "KollrobotMoveGroup.h"
-
+#include <map>
 #include <moveit/robot_state/conversions.h>
 #include <moveit/kinematic_constraints/utils.h>
 #include <moveit/collision_detection/collision_tools.h>
@@ -59,9 +59,7 @@ geometry_msgs::PoseStamped KollrobotMoveGroup::GetEndEffectorPose()
 
 std::string KollrobotMoveGroup::GetSaveStartPosition(geometry_msgs::TransformStamped target)
 {
-
     return "save_left";
-
 }
 
 void KollrobotMoveGroup::SetConstraints(moveit_msgs::Constraints constraints)
@@ -77,9 +75,63 @@ void KollrobotMoveGroup::ClearConstraints()
 
 }
 
+
+bool KollrobotMoveGroup::CheckTollerance(float x1, float x2, float tollerance)
+{
+    if((x1 <= x2 + tollerance) && (x1 >= x2 - tollerance))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool KollrobotMoveGroup::CheckPosition(std::string positionName)
+{
+    auto knownPoses = _moveGroup->getNamedTargets();
+    bool known = false;
+
+    for(int i = 0; i < knownPoses.size(); i++)
+    {
+        if(knownPoses[i] == positionName)
+        {
+            known = true;
+            break;
+        }
+    }
+
+    if(!known)
+    {
+        ROS_WARN_STREAM("Given Pose is not known by the controller!");
+        return false;
+    }
+
+    auto currentStateValues = _moveGroup->getCurrentJointValues();
+    auto stateValueMap = _moveGroup->getNamedTargetValues(positionName);
+    float tollerance = _paramStateCheckTollerance.GetValue();
+
+    std::vector<std::string> linkMap = {"shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
+                                        "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"};
+
+    for (int i = 0; i < linkMap.size(); i++)
+    {
+        float isVal = currentStateValues[i];
+        float shouldVal = stateValueMap[linkMap[i]];
+
+        if(!CheckTollerance(shouldVal, isVal, tollerance))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void KollrobotMoveGroup::SetPlanningScene()
 {
-    //creat hacked scene for save planning with kollrobot
+    //create hacked scene for save planning with kollrobot
     moveit_msgs::CollisionObject co;
     co.id = "kollrobotApprox";
     co.operation = co.ADD;
@@ -161,7 +213,7 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
-    //ROS_INFO("Added approx kollrobot for planning!!");
+    //ROS_INFO("Added approx kollrobot for planning!!");cd RO   
     _planningSceneInterface->applyCollisionObject(co);
 }
 
@@ -171,6 +223,7 @@ void KollrobotMoveGroup::InitParameter()
     _param_RefreshRate = _parameterHandler->AddParameter("RefreshRate", subNamespace, "", int(20));
     _paramMaxAccelerationScale = _parameterHandler->AddParameter("MaxAccelerationScale", subNamespace, "", 0.1f);
     _paramMaxVelocityScale = _parameterHandler->AddParameter("MaxVelocityScale", subNamespace, "", 0.1f);
+    _paramStateCheckTollerance = _parameterHandler->AddParameter("StateCheckTollerance", subNamespace, "", 0.1f);
     _paramPlanningTime = _parameterHandler->AddParameter("PlanningTime", subNamespace, "", 5.0f);
     _paramSecurityRange = _parameterHandler->AddParameter("SecurityRange", subNamespace, "", 0.02f);
 }

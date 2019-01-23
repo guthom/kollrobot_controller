@@ -5,6 +5,7 @@ MG_manipulator:
   MaxVelocityScale: 0.1
   PlanningTime: 5
   SecurityRange: 0.02
+  StateCheckTollerance: 0.1
   
 GripperRotOffset: 48.0
 GrippingTilt: 5.0

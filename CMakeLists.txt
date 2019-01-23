@@ -69,10 +69,10 @@ catkin_python_setup()
 #)
 
 #add all services
-#add_service_files(
-#    FILES
-#    ${SERVICES}
-#)
+add_service_files(
+    FILES
+    ${SERVICES}
+)
 
 #add all actions
 add_action_files(FILES ${ACTIONS})

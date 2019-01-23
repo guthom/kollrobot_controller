@@ -77,6 +77,8 @@ public:
 
     std::string GetSaveStartPosition( geometry_msgs::TransformStamped target);
 
+    bool CheckPosition(std::string positionName);
+
     void PlanSimulationPath();
     void UpdateCurrentState();
     void MoveToValidRandom();
@@ -117,6 +119,8 @@ private:
 
     void InitParameter();
 
+    bool CheckTollerance(float x1, float x2, float tollerance);
+
     void RunPlanning();
     void RunPlanningExecute();
     void MoveToValidRandomRun();
@@ -135,6 +139,7 @@ private:
     customparameter::ParameterHandler* _parameterHandler;
     customparameter::Parameter<int> _param_RefreshRate;
     customparameter::Parameter<float> _paramMaxVelocityScale;
+    customparameter::Parameter<float> _paramStateCheckTollerance;
     customparameter::Parameter<float> _paramMaxAccelerationScale;
     customparameter::Parameter<float> _paramPlanningTime;
     customparameter::Parameter<float> _paramSecurityRange;

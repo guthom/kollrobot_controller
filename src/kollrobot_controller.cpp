@@ -12,6 +12,7 @@
 #include "actions/PickBoxActionClass.h"
 #include "actions/GoPositionActionClass.h"
 #include "actions/PlaceBoxActionClass.h"
+#include "kollrobot_controller/CheckPosition.h"
 
 //common stuff
 float iRefreshRate = 30;
@@ -31,10 +32,13 @@ customparameter::Parameter<bool> paramNormalMode;
 
 KollrobotMoveGroup* armGroup;
 
+//actions
 PickBoxAction::PickBoxActionClass* pickBoxAction;
 GoPositionAction::GoPositionActionClass* goPositionAction;
 PlaceBoxAction::PlaceBoxActionClass* placeBoxAction;
 
+//service Stuff
+ros::ServiceServer checkPositionServer;
 
 void InitParams()
 {
@@ -54,6 +58,21 @@ void InitActions()
     pickBoxAction = new PickBoxAction::PickBoxActionClass(_node, armGroup);
     goPositionAction = new GoPositionAction::GoPositionActionClass(_node, armGroup);
     placeBoxAction = new PlaceBoxAction::PlaceBoxActionClass(_node, armGroup);
+}
+
+
+bool CheckPositionService(kollrobot_controller::CheckPositionRequest &req,
+                          kollrobot_controller::CheckPositionResponse &res)
+{
+    res.result = armGroup->CheckPosition(req.positionName);
+
+    return true;
+}
+
+void InitServices()
+{
+    checkPositionServer = _node->advertiseService("CheckPosition", CheckPositionService);
+    ROS_INFO_STREAM("Startet Service Server for CheckPosition");
 }
 
 float RandomFloat(float a, float b) {
@@ -173,6 +192,7 @@ int main(int argc, char **argv)
     InitParams();
     armGroup = new KollrobotMoveGroup(_node, parameterHandler, paramGroupName.GetValue());
     InitActions();
+    InitServices();
 
     //publisher for the planning scene
     //ros::Publisher octomap_pub = _node->advertise<moveit_msgs::PlanningScene>("/planning_scene", 1);
