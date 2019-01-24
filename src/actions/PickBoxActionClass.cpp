@@ -22,6 +22,7 @@ namespace PickBoxAction {
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "", 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "", 48.0f);
         paramGrippingTilt = _parameterHandler->AddParameter("GrippingTilt", "", 5.0f);
+        paramTrajectoryReplanningCount = _parameterHandler->AddParameter("TrajectoryReplanningCount", "", 5);
     }
 
     bool PickBoxActionClass::CheckRange(geometry_msgs::Vector3 position) {
@@ -55,7 +56,7 @@ namespace PickBoxAction {
         constraints.name = "BoxUP";
         std::vector <std::string> linkNames = _moveGroup->_moveGroup->getLinkNames();
 
-        geometry_msgs::TransformStamped currentPose = _transformationHandler->GetTransform("world", "wrist_2_link");
+        geometry_msgs::TransformStamped currentPose = _transformationHandler->GetTransform("wrist_2_link", "world");
 
         moveit_msgs::OrientationConstraint ocm;
 
@@ -223,11 +224,11 @@ namespace PickBoxAction {
             return;
         }
 
-        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform("base_link",
-                                                                                            newGoal->box_frameID);
+        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->box_frameID,
+                                                                                            "base_link");
 
         std::string savePose = _moveGroup->GetSaveStartPosition(boxTransform);
-        _moveGroup->GoPosition(savePose);
+        //_moveGroup->GoPosition(savePose);
 
         if (!CheckRange(boxTransform.transform.translation)) {
             PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
@@ -239,17 +240,21 @@ namespace PickBoxAction {
 
         SetConstraints();
 
+        geometry_msgs::PoseStamped startPose = _moveGroup->GetEndEffectorPose();
+        startPose = _transformationHandler->TransformPose(startPose, newGoal->box_frameID);
         geometry_msgs::PoseStamped targetPose = newGoal->box_pose;
         targetPose.pose = boxOrientation;
 
         PublishFeedback("Calculating Gripping Trajectory", 10.0);
         auto poseSeries = CalculatePickPoseSeries(targetPose, boxTransform);
+        //add home start pose to pose Series
+        poseSeries.push_back(startPose);
 
         //set speeds for the single trajecotry points
-        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.5, 0.8, 1.0};
+        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.5, 0.8, 1.0, 1.0};
 
         bool check = false;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < paramTrajectoryReplanningCount.GetValue(); i++)
         {
             auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
             //auto trajectory = _moveGroup->FuseTrajectories(trajectories);

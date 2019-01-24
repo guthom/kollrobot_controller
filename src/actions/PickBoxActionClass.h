@@ -39,6 +39,7 @@ namespace PickBoxAction
         customparameter::Parameter<float> paramGripperOffset;
         customparameter::Parameter<float> paramGripperRotOffset;
         customparameter::Parameter<float> paramGrippingTilt;
+        customparameter::Parameter<int> paramTrajectoryReplanningCount;
 
         //methods to calculate positions/trajecotries ect
         void SetBoxOrientation();

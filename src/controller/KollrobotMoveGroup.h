@@ -78,6 +78,7 @@ public:
     std::string GetSaveStartPosition( geometry_msgs::TransformStamped target);
 
     bool CheckPosition(std::string positionName);
+    bool IsTrajecotoryExecuting = false;
 
     void PlanSimulationPath();
     void UpdateCurrentState();

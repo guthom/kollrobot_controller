@@ -63,10 +63,10 @@ find_package(catkin REQUIRED
 catkin_python_setup()
 
 #add all message files
-#add_message_files(
-#    FILES
-#    ${MESSAGES}
-#)
+add_message_files(
+    FILES
+    ${MESSAGES}
+)
 
 #add all services
 add_service_files(

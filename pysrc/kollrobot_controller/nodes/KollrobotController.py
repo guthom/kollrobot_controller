@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import sys, os
 import rospy
 
@@ -7,7 +6,9 @@ projectDir = os.path.join(os.path.dirname(__file__), '../')
 
 sys.path.append(projectDir)
 
-import pysrc.kollrobot_controller.nodes.nodeconfig as config
+import nodeconfig as config
+
+from kollrobot_controller.msg._PlaceBoxActionGoal import *
 
 #ros stuff
 import tf2_ros

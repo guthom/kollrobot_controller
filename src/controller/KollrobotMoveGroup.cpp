@@ -44,7 +44,6 @@ void KollrobotMoveGroup::Init(ros::NodeHandle* parentNode)
     //run node
     _nodeThread = new boost::thread(boost::bind(&KollrobotMoveGroup::Run,this));
 
-
     //GoHome();
     SetPlanningScene();
 
@@ -183,6 +182,7 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
+    //TODO: Get pose from transformations!
     float camZ = 0.08f;
     primitive.dimensions[0] = camera[0];
     primitive.dimensions[1] = camera[1];
@@ -213,7 +213,7 @@ void KollrobotMoveGroup::SetPlanningScene()
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
 
-    //ROS_INFO("Added approx kollrobot for planning!!");cd RO   
+    //ROS_INFO("Added approx kollrobot for planning!!");
     _planningSceneInterface->applyCollisionObject(co);
 }
 
@@ -297,44 +297,55 @@ void KollrobotMoveGroup::ExecutePoseSeriesAsTrajectory(std::vector<geometry_msgs
 {
     visualization_msgs::MarkerArray waypointMarker = CreateWaypointMarker(poses);
     _pubWaypoints.publish(waypointMarker);
-
+    IsTrajecotoryExecuting = true;
     for(int i = 0; i < poses.size(); i++)
     {
         auto traj = CalculateTrajectory(poses[i], speeds[i]);
         ExecuteTrajectory(traj, frameID);
     }
+    IsTrajecotoryExecuting = false;
 }
 
 void KollrobotMoveGroup::ExecuteTrajectory(moveit_msgs::RobotTrajectory trajectory)
 {
+
+    IsTrajecotoryExecuting = true;
     _currentPlan.trajectory_ = trajectory;
     Execute();
+
+    IsTrajecotoryExecuting = false;
 }
 
 
 void KollrobotMoveGroup::ExecuteTrajectory(robot_trajectory::RobotTrajectory traj, std::string frameID)
 {
+    IsTrajecotoryExecuting = true;
     _currentPlan.trajectory_ = ToTrajectoryMSG(traj, frameID);
     Execute();
+    IsTrajecotoryExecuting = false;
 }
 
 void KollrobotMoveGroup::ExecuteTrajectory(std::vector<robot_trajectory::RobotTrajectory> trajectory,
                                            std::string frameID)
 {
+    IsTrajecotoryExecuting = true;
     for(int i = 0; i < trajectory.size(); i++)
     {
         _currentPlan.trajectory_ = ToTrajectoryMSG(trajectory[i], frameID);
         Execute();
     }
+    IsTrajecotoryExecuting = false;
 }
 
 void KollrobotMoveGroup::ExecuteTrajectory(std::vector<moveit_msgs::RobotTrajectory> trajectory)
 {
+    IsTrajecotoryExecuting = true;
     for(int i = 0; i < trajectory.size(); i++)
     {
         _currentPlan.trajectory_ = trajectory[i];
         Execute();
     }
+    IsTrajecotoryExecuting = false;
 }
 
 

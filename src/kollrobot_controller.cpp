@@ -13,6 +13,7 @@
 #include "actions/GoPositionActionClass.h"
 #include "actions/PlaceBoxActionClass.h"
 #include "kollrobot_controller/CheckPosition.h"
+#include "kollrobot_controller/IsTrajectoryExecuting.h"
 
 //common stuff
 float iRefreshRate = 30;
@@ -39,6 +40,7 @@ PlaceBoxAction::PlaceBoxActionClass* placeBoxAction;
 
 //service Stuff
 ros::ServiceServer checkPositionServer;
+ros::ServiceServer isTrajectoryExecuting;
 
 void InitParams()
 {
@@ -69,10 +71,22 @@ bool CheckPositionService(kollrobot_controller::CheckPositionRequest &req,
     return true;
 }
 
+bool IsTrajectoryExecutingService(kollrobot_controller::IsTrajectoryExecutingRequest &req,
+                          kollrobot_controller::IsTrajectoryExecutingResponse &res)
+{
+    res.result = armGroup->IsTrajecotoryExecuting;
+
+    return true;
+}
+
+
 void InitServices()
 {
     checkPositionServer = _node->advertiseService("CheckPosition", CheckPositionService);
-    ROS_INFO_STREAM("Startet Service Server for CheckPosition");
+    ROS_INFO_STREAM("Started Service Server for CheckPosition");
+
+    isTrajectoryExecuting = _node->advertiseService("IsTrajectoryExecuting", IsTrajectoryExecutingService);
+    ROS_INFO_STREAM("Started Service Server for IsTrajectoryExecuting");
 }
 
 float RandomFloat(float a, float b) {
@@ -87,6 +101,7 @@ void RunDemoMode()
     ros::Rate rate(iRefreshRate);
     while(_node->ok())
     {
+        armGroup->UpdateCurrentState();
         armGroup->UpdateCurrentState();
         //make new plan if armGroup is not planning
         if(!armGroup->IsPlanning && !armGroup->IsExecuting)

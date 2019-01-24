@@ -29,9 +29,9 @@ namespace PlaceBoxAction {
     void PlaceBoxActionClass::InitParameter()
     {
         paramMaxRange = _parameterHandler->AddParameter("MaxRange", "" , 1.4f);
-
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "" , 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "" , 48.0f);
+        paramTrajectoryReplanningCount = _parameterHandler->AddParameter("TrajectoryReplanningCount", "", 5);
     }
 
     void PlaceBoxActionClass::Init()
@@ -82,9 +82,9 @@ namespace PlaceBoxAction {
     {
         targetPose = _transformationHandler->TransformPose(targetPose, "base_link");
 
-        _transformationHandler->SendTransform(targetPose, "place_link");
+        _transformationHandler->SendTransform(targetPose, "base_link");
         _transformationHandler->WaitOne();
-        targetPose = _transformationHandler->TransformPose(targetPose, "place_link");
+        targetPose = _transformationHandler->TransformPose(targetPose, "base_link");
 
 
         targetPose.pose.position.z += 0.3;
@@ -189,8 +189,9 @@ namespace PlaceBoxAction {
             return;
         }
 
-        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform("base_link",
-                                                                                            newGoal->place_frameID);
+        geometry_msgs::TransformStamped boxTransform = _transformationHandler->GetTransform(newGoal->place_frameID,
+                                                                                            "base_link");
+
         if (!CheckRange(boxTransform.transform.translation)) {
             PublishFeedback("Box is not reachable within the workspace! - Aborting PickAction!", 100.0);
             _server->setSucceeded(_result);
@@ -212,11 +213,21 @@ namespace PlaceBoxAction {
         poseSeries.push_back(startPose);
 
         //set speeds for the single trajecotry points
-        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.8, 1.0};
+        std::vector<float> speeds{ 1.0, 0.5, 0.5, 0.8, 1.0, 1.0};
         auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
 
+        bool check = false;
+        for (int i = 0; i < paramTrajectoryReplanningCount.GetValue(); i++)
+        {
+            auto trajectories = _moveGroup->CalculateTrajectory(poseSeries, speeds);
+            //auto trajectory = _moveGroup->FuseTrajectories(trajectories);
+            check = _moveGroup->CheckTrajecotry(trajectories);
 
-        if(!_moveGroup->CheckTrajecotry(trajectories))
+            if(check)
+                break;
+        }
+
+        if(!check)
         {
             //cancel action
             PublishFeedback("Trajectory is not valid! Can't reach target! Cancel action!", 80.0);

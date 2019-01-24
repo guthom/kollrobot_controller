@@ -50,6 +50,7 @@ namespace PlaceBoxAction
         customparameter::Parameter<float> paramMaxRange;
         customparameter::Parameter<float> paramGripperOffset;
         customparameter::Parameter<float> paramGripperRotOffset;
+        customparameter::Parameter<int> paramTrajectoryReplanningCount;
 
     public:
         PlaceBoxActionClass(ros::NodeHandle *node, KollrobotMoveGroup *moveGroup);
