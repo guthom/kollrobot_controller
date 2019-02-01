@@ -32,6 +32,7 @@ namespace PlaceBoxAction {
         paramGripperOffset = _parameterHandler->AddParameter("GripperOffset", "" , 0.068f);
         paramGripperRotOffset = _parameterHandler->AddParameter("GripperRotOffset", "" , 48.0f);
         paramTrajectoryReplanningCount = _parameterHandler->AddParameter("TrajectoryReplanningCount", "", 5);
+        paramPlaceXOffset = _parameterHandler->AddParameter("Place_X_Offset", "", 0.065f);
     }
 
     void PlaceBoxActionClass::Init()
@@ -114,7 +115,7 @@ namespace PlaceBoxAction {
         std::vector<geometry_msgs::PoseStamped> waypoints;
 
         geometry_msgs::PoseStamped pose1 = targetPose;
-        pose1.pose.position.x += 0.15;
+        pose1.pose.position.x += 0.16;
         pose1.pose.position.z -= 0.40;
 
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
@@ -124,7 +125,7 @@ namespace PlaceBoxAction {
 
         geometry_msgs::PoseStamped pose3 = pose2;
         pose3.pose.position.z -= -0.01;
-        pose3.pose.position.x = targetPose.pose.position.x + 0.075;
+        pose3.pose.position.x = targetPose.pose.position.x + paramPlaceXOffset.GetValue();
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose3));
 
         geometry_msgs::PoseStamped pose4 = pose3;

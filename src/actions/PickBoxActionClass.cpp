@@ -160,12 +160,12 @@ namespace PickBoxAction {
 
         geometry_msgs::PoseStamped pose1 = targetPose;
         pose1.pose.position.z -= 0.15;
-        pose1.pose.position.x = -0.013;
+        //pose1.pose.position.x = -0.00;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose1));
 
         geometry_msgs::PoseStamped pose2 = pose1;
         pose2.pose.position.z = -gripperOffset + 0.01;
-        pose2.pose.position.x -= 0.005;
+        //pose2.pose.position.x -= 0.005;
         waypoints.push_back(_transformationHandler->TransformPose(transform, pose2));
 
         geometry_msgs::PoseStamped pose3 = pose2;

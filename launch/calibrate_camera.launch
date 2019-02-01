@@ -1,7 +1,7 @@
-<launch>	
+<launch>
 <!-- robot_ip: IP-address of the robot's socket-messaging server -->
   <!--arg name="robot_ip" default="172.22.222.111"/-->
-  <arg name="robot_ip" default="172.22.222.111"/>
+  <arg name="robot_ip" default="192.168.0.100"/>
   <arg name="limited" default="true"/>
   <arg name="min_payload"  default="0.0"/>
   <arg name="max_payload"  default="10.0"/>
@@ -10,8 +10,8 @@
   <arg name="db" default="false" />
   <arg name="config" default="true" />
   <arg name="debug" default="false" />
-  
-  <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf" args="0 0 0 0 0 0 1 /world /map"/>     
+    
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf" args="0 0 0 0 0 0 1 /world /map"/>    
   
   <!--//////////////////////// Modern ur10 driver///////////////////////////////////////-->
   <!-- robot model -->
@@ -27,7 +27,11 @@
     <arg name="servoj_time"  value="0.08" />
   </include>
   <!--///////////////////////////////////////////////////////////////////////////////-->
-    
+  
+    <include file="$(find ur_description)/launch/ur10_upload.launch">
+    <arg name="limited" value="$(arg limited)"/>
+  </include>
+  
   <node name="kollrobot_controller" pkg="kollrobot_controller" type="kollrobot_controller" output="screen">    
     <rosparam command="load" file="$(find kollrobot_controller)/yaml/kollrobot_controller.yaml" />
     <param name="SimMode" type="bool" value="false" />
@@ -35,15 +39,28 @@
     <param name="DemoUR10Mode" type="bool" value="false" />
     <param name="NormalMode" type="bool" value="true" />
   </node>
+
+  <!-- Launch moveit -->
+  <include file="$(find ur10_moveit_config)/launch/move_group.launch">
+    <arg name="limited" default="$(arg limited)"/>
+    <arg name="debug" default="$(arg debug)" />
+  </include>
   
-    <include file="$(find ur_description)/launch/ur10_upload.launch">
-    <arg name="limited" value="$(arg limited)"/>
+  <!-- Remap follow_joint_trajectory -->
+  <remap from="/follow_joint_trajectory" to="/arm_controller/follow_joint_trajectory"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+  
+  <!-- launch realsense-->
+  <include file="$(find qrcode_referencer)/launch/april_calibration.launch"/>
+    
+  <include file="$(find magic_box)/launch/magic_box_master.launch">
   </include>
 
-  <include file="$(find qrcode_referencer)/launch/april_calibration.launch"/>
-
-    <arg name="rviz_cfg" default="$(find kollrobot_controller)/rvizcfg/kollrobot_controller_sole.rviz" />
-    <node name="rviz_thomas" pkg="rviz" type="rviz" args="-d $(arg rviz_cfg)">
+  <arg name="rviz_cfg" default="$(find kollrobot_controller)/rvizcfg/kollrobot_controller.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_cfg)">
   </node>	
+
+
 </launch>
 	

@@ -10,12 +10,9 @@
 
   <group ns="depthcam1">
   <arg name="cameraName" value="depthcam1"/>
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf1" args="-0.04167592 0.12628078 -0.12417453 -0.449640650558 -0.438165235781 -0.559914792172 0.540675445185 /world /$(arg cameraName)_link_temp"/>  
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf2" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf3" args="0.0 0.0 0.0 0.0 0.0 -0.032353 0.99948 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>
-       <!--node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf2" args="0.05237348 0.12714111 -0.12105925 -0.0147995599341 0.638692785767 0.769087051438 0.0189104665781 /world /$(arg cameraName)_link_temp"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf1" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_tf0" args="0.0 0.0 0.0 0.0 0.0 0.0 0.0 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/-->    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf1" args="-0.030686, 0.131405, -0.119888 -0.445416, -0.433900, -0.555073, 0.552476 /world /$(arg cameraName)_link_temp"/>  
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf2" args="0.0, 0.0, 0.0  0.0, -0.707, 0.0,  0.707 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp1"/>   
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf3" args="0.0, 0.0, 0.0  0.707, 0.0, 0.0,  0.707 /$(arg cameraName)_link_temp1 /$(arg cameraName)_link"/>   
   
     <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
       <arg name="camera"            value="$(arg cameraName)"/>
@@ -58,7 +55,7 @@
     </include>
 
     <rosparam command="load" file="$(find qrcode_referencer)/config/settings.yaml"/>
-    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer" output="screen">
+    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer">
       <remap from="/depthcam/color/camera_info" to="/$(arg cameraName)/$(arg cameraName)/color/camera_info"/>
       <remap from="/depthcam/color/image_raw" to="/$(arg cameraName)/$(arg cameraName)/color/image_raw"/>
       <remap from="/depthcam/depth_registered/points" to="/$(arg cameraName)/$(arg cameraName)/depth_registered/points"/>
@@ -67,12 +64,10 @@
 
   <group ns="depthcam2">
     <arg name="cameraName"            value="depthcam2"/>    
-    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf1" args="-0.33838516 -0.09957447 -0.11499691  0.0194279428776 -0.616706814853 0.0561079559232 0.784950416798 /world /$(arg cameraName)_link_temp"/>   
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf2" args="0 0 0 0.5 -0.5 0.5 0.5 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp2"/>    
-    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf3" args="-0.0216 0.0 0.0432 -0.021925 0.039941 -0.016051 0.99883 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/>
-<!--     <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf3" args="0.0 0.0 0.0 0.0 0.0 0.0 1.0 /$(arg cameraName)_link_temp2 /$(arg cameraName)_link"/> -->
-    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf1" args="-0.320875, -0.148761, -0.129829  -0.000370, -0.613088, 0.009184, 0.789961 /world /$(arg cameraName)_link_temp"/>   
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf2" args="0.0, 0.0, 0.0  0.0, -0.707, 0.0,  0.707 /$(arg cameraName)_link_temp /$(arg cameraName)_link_temp1"/>   
+    <node pkg="tf2_ros" type="static_transform_publisher" name="$(arg cameraName)_link_tf3" args="0.0, 0.0, 0.0  0.707, 0.0, 0.0,  0.707 /$(arg cameraName)_link_temp1 /$(arg cameraName)_link"/>   
+   
     <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
       <arg name="camera"            value="$(arg cameraName)"/>
       <arg name="serial_no"           value="746112060521"/>
@@ -107,7 +102,7 @@
     </include>
 
     <rosparam command="load" file="$(find qrcode_referencer)/config/settings.yaml"/>
-    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer" output="screen">
+    <node name="qrcode_referencer$(arg cameraName)" pkg="qrcode_referencer" type="qrcode_referencer">
       <remap from="/depthcam/color/camera_info" to="/$(arg cameraName)/$(arg cameraName)/color/camera_info"/>
       <remap from="/depthcam/color/image_raw" to="/$(arg cameraName)/$(arg cameraName)/color/image_raw"/>
       <remap from="/depthcam/depth_registered/points" to="/$(arg cameraName)/$(arg cameraName)/depth_registered/points"/>

@@ -1,54 +1,57 @@
 <launch>
-<!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find ropose)/worlds/ropose_real_demo_no_cam.world"/>
-    <!-- more default parameters can be changed here -->
-    <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="false"/>
-    <arg name="headless" value="false"/>
-    <arg name="debug" value="false"/>
-  </include>
-
-
-  <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf" args="0 0 0 0 0 0 1 /world /map"/>    
-
-  <!-- load params-->
+<!-- robot_ip: IP-address of the robot's socket-messaging server -->
+  <!--arg name="robot_ip" default="172.22.222.111"/-->
+  <arg name="robot_ip" default="192.168.0.100"/>
   <arg name="limited" default="true"/>
-  <arg name="robot_name" default="ur10"/>
-  <arg name="robot_description" default="$(arg robot_name)/robot_description"/>
-
-  <!-- send robot urdf to param server -->
+  <arg name="min_payload"  default="0.0"/>
+  <arg name="max_payload"  default="10.0"/>
+  <arg name="prefix" default="" />
+  <arg name="sim" default="false" />
+  <arg name="db" default="false" />
+  <arg name="config" default="true" />
+  <arg name="debug" default="false" />
+    
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf" args="0 0 0 0 0 0 1 /world /map"/>    
+  
+  <!--//////////////////////// Modern ur10 driver///////////////////////////////////////-->
+  <!-- robot model -->
   <include file="$(find ur_description)/launch/ur10_upload.launch">
     <arg name="limited" value="$(arg limited)"/>
   </include>
-
-  <!-- push robot_description to factory and spawn robot in gazebo -->
-  <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot" respawn="false"/>
-
-  <include file="$(find ur_gazebo)/launch/controller_utils.launch"/>
-
-  <rosparam file="$(find ropose)/yaml/arm_controller_ur10.yaml" command="load"/>
-  <node name="arm_controller_spawner" pkg="controller_manager" type="controller_manager" args="spawn arm_controller" respawn="false"/>
   
-  <!-- upload robot descripton-->
-  <include file="$(find ur10_moveit_config)/launch/ur10_moveit_planning_execution.launch">
-    <arg name="sim" value="true"/>
+  <!-- ur common -->
+  <include file="$(find ur_modern_driver)/launch/ur_common.launch">
+    <arg name="robot_ip" value="$(arg robot_ip)"/>
+    <arg name="min_payload"  value="$(arg min_payload)"/>
+    <arg name="max_payload"  value="$(arg max_payload)"/>
+    <arg name="servoj_time"  value="0.08" />
   </include>
-    
-  <node name="kollrobot_controller" pkg="kollrobot_controller" type="kollrobot_controller" output="screen">    
-    <rosparam command="load" file="$(find kollrobot_controller)/yaml/kollrobot_controller.yaml" />
-    <param name="SimMode" type="bool" value="false" />
-    <param name="DemoMode" type="bool" value="false" />
-    <param name="DemoUR10Mode" type="bool" value="true" />
-    <param name="NormalMode" type="bool" value="false" />
-  </node>
+  <!--///////////////////////////////////////////////////////////////////////////////-->
   
     <include file="$(find ur_description)/launch/ur10_upload.launch">
     <arg name="limited" value="$(arg limited)"/>
   </include>
+  
+  <node name="kollrobot_controller" pkg="kollrobot_controller" type="kollrobot_controller" output="screen">    
+    <rosparam command="load" file="$(find kollrobot_controller)/yaml/kollrobot_controller.yaml" />
+    <param name="SimMode" type="bool" value="false" />
+    <param name="DemoMode" type="bool" value="false" />
+    <param name="DemoUR10Mode" type="bool" value="false" />
+    <param name="NormalMode" type="bool" value="true" />
+  </node>
 
-  <include file="$(find qrcode_referencer)/launch/april_calibration.launch"/>
+  <!-- Launch moveit -->
+  <include file="$(find ur10_moveit_config)/launch/move_group.launch">
+    <arg name="limited" default="$(arg limited)"/>
+    <arg name="debug" default="$(arg debug)" />
+  </include>
+  
+  <!-- Remap follow_joint_trajectory -->
+  <remap from="/follow_joint_trajectory" to="/arm_controller/follow_joint_trajectory"/>
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+  
+  <include file="$(find qrcode_referencer)/launch/april_calibration_dev.launch"/>
 
     <arg name="rviz_cfg" default="$(find kollrobot_controller)/rvizcfg/kollrobot_controller_sole.rviz" />
     <node name="rviz_thomas" pkg="rviz" type="rviz" args="-d $(arg rviz_cfg)">
