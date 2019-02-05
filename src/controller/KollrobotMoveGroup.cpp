@@ -157,7 +157,7 @@ void KollrobotMoveGroup::SetPlanningScene()
     box_pose.orientation.w = 1.0;
     box_pose.position.x = 0.0;
     box_pose.position.y = 0.0;
-    box_pose.position.z = -0.9;
+    box_pose.position.z = -0.55;
 
     co.primitives.push_back(primitive);
     co.primitive_poses.push_back(box_pose);
