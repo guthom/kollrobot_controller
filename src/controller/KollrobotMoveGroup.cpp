@@ -149,6 +149,19 @@ void KollrobotMoveGroup::SetPlanningScene()
     float camera[3] = {0.12f + securityRange, 0.05f + securityRange/4, 0.06f};
     float gripper[3] = {0.076f, 0.085f, 0.085f};
 
+    //add groundplane
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0] = 10.0;
+    primitive.dimensions[1] = 10.0;
+    primitive.dimensions[2] = 0.02;
+    box_pose.orientation.w = 1.0;
+    box_pose.position.x = - 0.9;
+    box_pose.position.y = 0.0;
+    box_pose.position.z = 0.0;
+
+    co.primitives.push_back(primitive);
+    co.primitive_poses.push_back(box_pose);
+
     primitive.dimensions.resize(3);
     primitive.dimensions[0] = bigBox[0];
     primitive.dimensions[1] = bigBox[1];
