@@ -1,8 +1,8 @@
 MG_manipulator:
   RefreshRate: 20
   SetConstraints: false
-  MaxAccelerationScale: 0.05
-  MaxVelocityScale: 0.05
+  MaxAccelerationScale: 0.07
+  MaxVelocityScale: 0.07
   PlanningTime: 5
   SecurityRange: 0.02
   StateCheckTollerance: 0.1
